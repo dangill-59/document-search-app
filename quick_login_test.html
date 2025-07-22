@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Login Debug Tool</h1>
+    
+    <div class="test-section">
+        <h3>1. Server Connection Test</h3>
+        <button onclick="testServerConnection()">Test Server Connection</button>
+        <div id="connectionResult" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. API Endpoint Test</h3>
+        <button onclick="testAPIEndpoints()">Test API Endpoints</button>
+        <div id="apiResult" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Login Test</h3>
+        <form onsubmit="testLogin(event)">
+            <div>
+                <label>Username: <input type="text" id="testUsername" value="admin"></label>
+                <label>Password: <input type="password" id="testPassword" value="admin123"></label>
+                <button type="submit">Test Login</button>
+            </div>
+        </form>
+        <div id="loginResult" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Browser Console Errors</h3>
+        <p>Open browser developer tools (F12) and check the Console and Network tabs for errors.</p>
+        <button onclick="checkConsoleErrors()">Show Common Issues</button>
+        <div id="consoleHelp" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.innerHTML += `[${timestamp}] ${message}\n`;
+            if (isError) {
+                element.style.color = '#dc3545';
+            }
+        }
+        
+        async function testServerConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = '';
+            
+            log('connectionResult', '🔄 Testing server connection...');
+            
+            try {
+                const response = await fetch('http://localhost:3000/', { method: 'GET' });
+                if (response.ok) {
+                    log('connectionResult', '✅ Server is responding on port 3000');
+                    log('connectionResult', `📊 Response status: ${response.status}`);
+                } else {
+                    log('connectionResult', `⚠️ Server responded but with status: ${response.status}`, true);
+                }
+            } catch (error) {
+                log('connectionResult', `❌ Cannot connect to server: ${error.message}`, true);
+                log('connectionResult', '💡 Make sure server is running: node server.js');
+                log('connectionResult', '💡 Check if port 3000 is available');
+            }
+        }
+        
+        async function testAPIEndpoints() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '';
+            
+            log('apiResult', '🔄 Testing API endpoints...');
+            
+            const endpoints = [
+                { path: '/auth/login', method: 'POST', data: { username: 'test', password: 'test' } },
+                { path: '/projects', method: 'GET', requiresAuth: true }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const options = {
+                        method: endpoint.method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    
+                    if (endpoint.data) {
+                        options.body = JSON.stringify(endpoint.data);
+                    }
+                    
+                    const response = await fetch(`${API_BASE}${endpoint.path}`, options);
+                    const data = await response.json();
+                    
+                    log('apiResult', `📡 ${endpoint.method} ${endpoint.path}: ${response.status}`);
+                    log('apiResult', `📝 Response: ${JSON.stringify(data, null, 2)}`);
+                    
+                } catch (error) {
+                    log('apiResult', `❌ ${endpoint.path}: ${error.message}`, true);
+                }
+            }
+        }
+        
+        async function testLogin(event) {
+            event.preventDefault();
+            
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '';
+            
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            log('loginResult', `🔄 Testing login with username: ${username}`);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                log('loginResult', `📊 Response status: ${response.status}`);
+                log('loginResult', `📝 Response data: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok && data.token) {
+                    log('loginResult', '✅ LOGIN SUCCESSFUL!');
+                    log('loginResult', `🎟️ Token: ${data.token.substring(0, 20)}...`);
+                    log('loginResult', `👤 User: ${data.user.username} (${data.user.role_name})`);
+                    
+                    // Test token validation
+                    log('loginResult', '🔄 Testing token validation...');
+                    const validateResponse = await fetch(`${API_BASE}/auth/validate`, {
+                        headers: {
+                            'Authorization': `Bearer ${data.token}`
+                        }
+                    });
+                    
+                    if (validateResponse.ok) {
+                        log('loginResult', '✅ Token validation successful!');
+                    } else {
+                        log('loginResult', '❌ Token validation failed', true);
+                    }
+                    
+                } else {
+                    log('loginResult', '❌ LOGIN FAILED', true);
+                    if (data.error) {
+                        log('loginResult', `📝 Error: ${data.error}`, true);
+                    }
+                }
+                
+            } catch (error) {
+                log('loginResult', `❌ Login test error: ${error.message}`, true);
+                log('loginResult', '💡 This usually means the server is not running or not accessible');
+            }
+        }
+        
+        function checkConsoleErrors() {
+            const resultDiv = document.getElementById('consoleHelp');
+            resultDiv.innerHTML = `
+🔍 Common Issues to Check:
+
+1. NETWORK ERRORS:
+   - Check Network tab in DevTools for failed requests
+   - Look for "CORS" errors (Cross-Origin Resource Sharing)
+   - Check for "ERR_CONNECTION_REFUSED" (server not running)
+
+2. SERVER ISSUES:
+   - Ensure server is running: node server.js
+   - Check server console for error messages
+   - Verify port 3000 is not blocked by firewall
+
+3. DATABASE ISSUES:
+   - Delete dms.db file and restart server to recreate
+   - Check server logs for SQLite errors
+
+4. AUTHENTICATION ISSUES:
+   - Run the debug script to recreate admin user
+   - Check if bcrypt is installed: npm install bcrypt
+
+5. FRONTEND ISSUES:
+   - Clear browser cache and cookies
+   - Try opening in incognito/private mode
+   - Check if JavaScript is enabled
+
+6. NODE.JS DEPENDENCIES:
+   - Run: npm install
+   - Check for missing packages: better-sqlite3, bcrypt, etc.
+
+💡 If nothing works, try these commands:
+   rm dms.db
+   npm install
+   node server.js
+            `;
+        }
+        
+        // Auto-run connection test on page load
+        window.onload = function() {
+            testServerConnection();
+        };
+    </script>
+</body>
+</html>

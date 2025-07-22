@@ -1,0 +1,3340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Document Search & Viewer</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #764ba2;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --border-color: #e1e5e9;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e3f2fd 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 2;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-box h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .toolbar {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-section {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .project-selector {
+            margin-bottom: 2rem;
+        }
+
+        .project-selector h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .project-card {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--project-color, var(--primary-color));
+        }
+
+        .project-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .project-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .project-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .project-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .project-card:hover .project-actions,
+        .project-card.selected .project-actions {
+            opacity: 1;
+        }
+
+        .search-form {
+            display: none;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-form.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .search-tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .search-tab:hover:not(.active) {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 6px 6px 0 0;
+        }
+
+        .search-panel {
+            display: none;
+        }
+
+        .search-panel.active {
+            display: block;
+        }
+
+        .search-form h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .advanced-search-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .range-input {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .range-input input {
+            flex: 1;
+        }
+
+        .range-input span {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: var(--white);
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: var(--text-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--white);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .results-section {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .results-header h3 {
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .results-count {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-btn {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .view-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .document-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .document-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .document-grid.compact-view {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .document-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .document-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .document-card.list-view {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1rem 1.5rem;
+        }
+
+        .document-card.compact-view {
+            padding: 1rem;
+        }
+
+        .document-card.compact-view .document-fields {
+            display: none;
+        }
+
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .document-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .document-card:hover .document-actions {
+            opacity: 1;
+        }
+
+        .document-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .document-fields {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .field-value {
+            color: var(--text-dark);
+            text-align: right;
+        }
+
+        .document-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: var(--info-color);
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: var(--success-color);
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: var(--warning-color);
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: var(--danger-color);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-left: 4px solid;
+            animation: toastSlideIn 0.3s ease-out;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.toast-success {
+            border-left-color: var(--success-color);
+        }
+
+        .toast.toast-error {
+            border-left-color: var(--danger-color);
+        }
+
+        .toast.toast-info {
+            border-left-color: var(--info-color);
+        }
+
+        .highlight {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            max-height: 90vh;
+            width: 900px;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            flex: 1;
+            margin: 0;
+        }
+
+        .modal-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .document-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+            transition: var(--transition);
+        }
+
+        .document-info.hidden-info {
+            display: none;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .info-edit {
+            margin-top: 0.5rem;
+        }
+
+        .info-edit .form-control {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            min-height: auto;
+        }
+
+        .info-edit input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+
+        /* Page Viewer Styles */
+        .page-viewer {
+            margin-top: 2rem;
+        }
+
+        .page-viewer h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .viewer-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .info-toggle-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--info-color);
+            background: transparent;
+            color: var(--info-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-toggle-btn:hover {
+            background: var(--info-color);
+            color: var(--white);
+        }
+
+        .info-toggle-btn.active {
+            background: var(--info-color);
+            color: var(--white);
+        }
+
+        .index-toggle-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .index-toggle-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .index-toggle-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+            background: var(--white);
+        }
+
+        .page-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .page-thumbnail {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 2rem;
+        }
+
+        .page-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .page-info {
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .page-number {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .page-source {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .page-index-info {
+            padding: 0.5rem 0.75rem;
+            background: #f8f9fa;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .page-index-info.show {
+            display: block;
+        }
+
+        .page-index-field {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .page-index-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .page-index-label {
+            font-weight: 600;
+            color: var(--text-light);
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+        }
+
+        .page-index-value {
+            color: var(--text-dark);
+            text-align: right;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pdf-badge {
+            background: var(--danger-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .image-badge {
+            background: var(--info-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* File Upload Styles */
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            background: #fafafa;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover,
+        .file-upload-area.drag-over {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .file-list {
+            margin-top: 1rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-size {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .file-remove {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Admin access indicator */
+        .admin-badge {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 0.5rem;
+        }
+
+        /* Upload Modal Styles */
+        .upload-modal .modal-content {
+            width: 800px;
+            max-width: 95%;
+        }
+
+        .upload-form {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-section,
+            .results-section {
+                padding: 1.5rem;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+            
+            .search-fields,
+            .advanced-search-fields {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-grid,
+            .document-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .results-meta {
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+            
+            .document-card.list-view {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .page-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .page-index-info {
+                font-size: 0.7rem;
+            }
+
+            .page-index-field {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.1rem;
+            }
+
+            .page-index-label {
+                margin-right: 0;
+            }
+
+            .page-index-value {
+                text-align: left;
+                white-space: normal;
+            }
+
+            .page-viewer-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .viewer-controls {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .index-toggle-btn,
+            .info-toggle-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>📄 Document Search</h1>
+            <p style="margin-bottom: 2rem; color: var(--text-light);">Advanced Document Management with PDF Page Splitting & Editing</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-control" required autocomplete="username" value="admin">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required autocomplete="current-password" value="admin123">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
+                    <span id="loginBtnText">Sign In</span>
+                    <span id="loginLoader" class="loading hidden"></span>
+                </button>
+            </form>
+            
+            <div id="loginError" class="alert alert-error hidden" style="margin-top: 1rem;"></div>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; font-size: 0.9rem; color: var(--text-light);">
+                <strong>Demo Credentials:</strong><br>
+                Username: admin<br>
+                Password: admin123<br><br>
+                <strong>🆕 Enhanced Features:</strong><br>
+                • PDF page splitting<br>
+                • Edit document index fields<br>
+                • Soft delete documents<br>
+                • Toggle index info in page view<br>
+                • Toggle document info in viewer
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container hidden">
+        <!-- Header -->
+        <div class="header">
+            <h1>📄 Advanced Document Search & Viewer</h1>
+            <p>Find, view, edit and manage your business documents with powerful search, PDF page splitting, and field editing</p>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div>
+                    <div id="userDisplay" style="font-weight: 600;"></div>
+                    <div id="userRole" style="font-size: 0.9rem; opacity: 0.8;"></div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="btn btn-info btn-sm" onclick="showRecentDocuments()">
+                🕒 Recent Documents
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="showFavoriteDocuments()">
+                ⭐ Favorites
+            </button>
+            <button class="btn btn-success btn-sm" onclick="refreshProjects()">
+                🔄 Refresh Projects
+            </button>
+            <!-- Admin Panel Link (only shown for administrators) -->
+            <div id="adminControls" class="hidden" style="margin-left: auto; display: flex; gap: 1rem;">
+                <a href="/admin" class="btn btn-danger btn-sm">
+                    🔧 Admin Panel
+                    <span class="admin-badge">Admin</span>
+                </a>
+                <button class="btn btn-warning btn-sm" onclick="debugPageCounts()" title="Check and fix page count issues">
+                    🔍 Debug Pages
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="exportResults()">
+                    📊 Export Results
+                </button>
+            </div>
+            <div id="regularControls" style="margin-left: auto;">
+                <button class="btn btn-secondary btn-sm" onclick="exportResults()">
+                    📊 Export Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <!-- Project Selector -->
+            <div class="project-selector">
+                <h2>🚀 Select a Project</h2>
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    Choose a project to search its documents or upload new documents. PDFs will be automatically split into individual pages.
+                </div>
+                <div class="project-grid" id="projectGrid">
+                    <!-- Projects will be loaded here -->
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <h3>Loading projects...</h3>
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <div class="search-form" id="searchForm">
+                <div class="search-tabs">
+                    <div class="search-tab active" data-tab="basic">🔍 Basic Search</div>
+                    <div class="search-tab" data-tab="advanced">⚙️ Advanced Search</div>
+                    <div class="search-tab" data-tab="fulltext">📝 Full-Text Search</div>
+                </div>
+
+                <!-- Basic Search Panel -->
+                <div class="search-panel active" id="basicSearchPanel">
+                    <h3>🔍 Search Documents</h3>
+                    <div class="search-fields" id="searchFields">
+                        <!-- Dynamic search fields will be added here -->
+                    </div>
+                </div>
+
+                <!-- Advanced Search Panel -->
+                <div class="search-panel" id="advancedSearchPanel">
+                    <h3>⚙️ Advanced Search Options</h3>
+                    <div class="advanced-search-fields" id="advancedSearchFields">
+                        <div class="form-group">
+                            <label for="advCreatedBy">Created By</label>
+                            <input type="text" id="advCreatedBy" class="form-control" placeholder="Enter creator name">
+                        </div>
+                        <div class="form-group">
+                            <label for="advDateRange">Date Range</label>
+                            <div class="range-input">
+                                <input type="date" id="advDateFrom" class="form-control">
+                                <span>to</span>
+                                <input type="date" id="advDateTo" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="advPageCount">Page Count</label>
+                            <div class="range-input">
+                                <input type="number" id="advPageCountMin" class="form-control" placeholder="Min">
+                                <span>to</span>
+                                <input type="number" id="advPageCountMax" class="form-control" placeholder="Max">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full-Text Search Panel -->
+                <div class="search-panel" id="fulltextSearchPanel">
+                    <h3>📝 Full-Text Document Search</h3>
+                    <div class="form-group">
+                        <label for="fulltextQuery">Search in document content</label>
+                        <input type="text" id="fulltextQuery" class="form-control" placeholder="Enter keywords to search within document content...">
+                        <small style="color: var(--text-light); margin-top: 0.5rem; display: block;">
+                            Use quotes for exact phrases, + for required words, - to exclude words
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="searchTitles" checked> Include document titles
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="searchDescriptions" checked> Include descriptions
+                        </label>
+                    </div>
+                </div>
+
+                <div class="search-actions">
+                    <button class="btn btn-primary" onclick="performSearch()">
+                        🔍 Search Documents
+                    </button>
+                    <button class="btn btn-success" id="addDocumentBtn" onclick="showAddDocumentModal()" style="display: none;">
+                        📤 Add Document
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearSearch()">
+                        ❌ Clear Search
+                    </button>
+                    <span id="searchStatus" style="margin-left: 1rem; color: var(--text-light);"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h3>📋 Search Results</h3>
+                <div class="results-meta">
+                    <div class="results-count" id="resultsCount">0 documents found</div>
+                    <div class="view-options">
+                        <button class="view-btn active" data-view="grid" onclick="changeView('grid')">⊞</button>
+                        <button class="view-btn" data-view="list" onclick="changeView('list')">☰</button>
+                        <button class="view-btn" data-view="compact" onclick="changeView('compact')">⋯</button>
+                    </div>
+                    <select id="sortOptions" class="form-control" style="width: auto;" onchange="sortResults()">
+                        <option value="date_desc">Newest first</option>
+                        <option value="date_asc">Oldest first</option>
+                        <option value="title_asc">Title A-Z</option>
+                        <option value="title_desc">Title Z-A</option>
+                    </select>
+                </div>
+            </div>
+            <div class="document-grid" id="documentGrid">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalDocumentTitle">📄 Document Viewer</h3>
+                <div class="modal-header-actions">
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Document Info Toggle -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                    <button class="info-toggle-btn active" id="infoToggleBtn" onclick="Documents.toggleDocumentInfo()">
+                        📄 Hide Document Info
+                    </button>
+                </div>
+                
+                <div class="document-info" id="documentInfo">
+                    <!-- Document information will be displayed here -->
+                </div>
+                
+                <!-- Page Viewer Section -->
+                <div class="page-viewer" id="pageViewer">
+                    <div class="page-viewer-header">
+                        <h4>📑 Document Pages</h4>
+                        <div class="viewer-controls">
+                            <button class="index-toggle-btn" id="indexToggleBtn" onclick="Documents.toggleIndexInfo()">
+                                📋 Show Index Info
+                            </button>
+                        </div>
+                    </div>
+                    <div class="page-grid" id="pageGrid">
+                        <!-- Document pages will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Document Modal -->
+    <div id="addDocumentModal" class="modal upload-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📤 Add New Document</h3>
+                <button class="close-btn" onclick="closeAddDocumentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addDocumentForm" class="upload-form">
+                    <!-- Basic Information -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="docTitle">Document Title *</label>
+                            <input type="text" id="docTitle" class="form-control" required placeholder="Enter document title">
+                        </div>
+                        <div class="form-group">
+                            <label for="docType">Document Type</label>
+                            <select id="docType" class="form-control">
+                                <option value="general">General</option>
+                                <option value="invoice">Invoice</option>
+                                <option value="contract">Contract</option>
+                                <option value="report">Report</option>
+                                <option value="legal">Legal</option>
+                                <option value="financial">Financial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="docDescription">Description</label>
+                        <textarea id="docDescription" class="form-control" rows="3" placeholder="Enter document description"></textarea>
+                    </div>
+
+                    <!-- Dynamic Index Fields -->
+                    <div id="indexFieldsContainer">
+                        <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📝 Index Fields</h4>
+                        <div id="dynamicIndexFields">
+                            <!-- Dynamic fields will be added here based on selected project -->
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label>Upload Files</label>
+                        <div class="alert alert-info" style="margin-bottom: 1rem;">
+                            <span>🔄</span>
+                            <strong>PDF Page Splitting Enabled:</strong> Multi-page PDFs will automatically be split into individual pages for better organization and searching.
+                        </div>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif">
+                            <div class="upload-icon">📁</div>
+                            <p><strong>Click to select files</strong> or drag and drop here</p>
+                            <p style="font-size: 0.9rem; color: var(--text-light);">
+                                Supported formats: PDF (auto-split), JPG, PNG, TIFF
+                            </p>
+                        </div>
+                        <div id="fileList" class="file-list"></div>
+                    </div>
+
+                    <!-- Submit Actions -->
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-secondary" onclick="closeAddDocumentModal()">
+                            ❌ Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success" id="submitDocumentBtn">
+                            <span id="submitDocumentBtnText">💾 Save Document</span>
+                            <span id="submitDocumentLoader" class="loading hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const AppState = {
+            currentUser: null,
+            token: null,
+            projects: [],
+            selectedProject: null,
+            documents: [],
+            searchResults: [],
+            currentDocument: null,
+            currentView: 'grid',
+            uploadFiles: [],
+            isSubmitting: false,
+            apiBase: 'http://localhost:3000/api'
+        };
+
+        // API Client
+        const API = {
+            getHeaders() {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (AppState.token) {
+                    headers['Authorization'] = `Bearer ${AppState.token}`;
+                }
+                
+                return headers;
+            },
+
+            async request(endpoint, options = {}) {
+                try {
+                    const url = `${AppState.apiBase}${endpoint}`;
+                    const config = {
+                        ...options,
+                        headers: {
+                            ...this.getHeaders(),
+                            ...options.headers
+                        }
+                    };
+
+                    const response = await fetch(url, config);
+                    
+                    if (!response.ok) {
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                        } catch (e) {
+                            errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+                        }
+                        
+                        let errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+                        
+                        if (response.status === 403) {
+                            errorMessage = `Access denied: ${errorData.error || 'You may not have permission for this action'}`;
+                        } else if (response.status === 401) {
+                            errorMessage = `Authentication failed: ${errorData.error || 'Please log in again'}`;
+                            logout();
+                        } else if (response.status === 404) {
+                            errorMessage = `Not found: ${errorData.error || 'The requested resource was not found'}`;
+                        }
+                        
+                        throw new Error(errorMessage);
+                    }
+                    
+                    return response;
+                } catch (error) {
+                    console.error('API Request failed:', error);
+                    if (error.message.includes('fetch')) {
+                        throw new Error('Network error: Unable to connect to server. Please check your connection and ensure the server is running on http://localhost:3000');
+                    }
+                    throw error;
+                }
+            },
+
+            async get(endpoint) {
+                const response = await this.request(endpoint);
+                return response.json();
+            },
+
+            async post(endpoint, data) {
+                const response = await this.request(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                return response.json();
+            },
+
+            async uploadFile(endpoint, formData) {
+                const headers = {};
+                if (AppState.token) {
+                    headers['Authorization'] = `Bearer ${AppState.token}`;
+                }
+
+                const response = await fetch(`${AppState.apiBase}${endpoint}`, {
+                    method: 'POST',
+                    headers,
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Upload failed');
+                }
+
+                return response.json();
+            },
+
+            async put(endpoint, data) {
+                const response = await this.request(endpoint, {
+                    method: 'PUT',
+                    body: JSON.stringify(data),
+                });
+                return response.json();
+            },
+
+            async delete(endpoint) {
+                const response = await this.request(endpoint, {
+                    method: 'DELETE',
+                });
+                return response.json();
+            }
+        };
+
+        // Utility Functions
+        const Utils = {
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            },
+
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(amount);
+            },
+
+            formatFileSize(bytes) {
+                if (!bytes || bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            },
+
+            sanitizeInput(input) {
+                if (!input) return '';
+                const div = document.createElement('div');
+                div.textContent = input;
+                return div.innerHTML;
+            },
+
+            getProjectTypeIcon(type) {
+                const icons = {
+                    'finance': '💰',
+                    'hr': '👥',
+                    'legal': '⚖️',
+                    'operations': '⚙️',
+                    'marketing': '📢',
+                    'custom': '🎨'
+                };
+                return icons[type] || '📂';
+            },
+
+            getFileTypeIcon(filename) {
+                if (!filename) return '📄';
+                const ext = filename.split('.').pop()?.toLowerCase();
+                const icons = {
+                    'pdf': '📄',
+                    'doc': '📝',
+                    'docx': '📝',
+                    'xls': '📊',
+                    'xlsx': '📊',
+                    'ppt': '📊',
+                    'pptx': '📊',
+                    'jpg': '🖼️',
+                    'jpeg': '🖼️',
+                    'png': '🖼️',
+                    'gif': '🖼️',
+                    'tiff': '🖼️',
+                    'tif': '🖼️'
+                };
+                return icons[ext] || '📎';
+            },
+
+            highlightSearchTerm(text, searchTerm) {
+                if (!searchTerm || !text) return text;
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            },
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                
+                const icon = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                }[type] || 'ℹ️';
+                
+                toast.innerHTML = `${icon} ${message}`;
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            },
+
+            generateAvatar(name) {
+                return name ? name.charAt(0).toUpperCase() : '?';
+            },
+
+            setLoading(elementId, isLoading) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                
+                const textSpan = element.querySelector('#' + elementId + 'Text');
+                const loader = element.querySelector('#' + elementId + 'Loader');
+                
+                if (isLoading) {
+                    element.disabled = true;
+                    if (textSpan) textSpan.style.display = 'none';
+                    if (loader) loader.classList.remove('hidden');
+                } else {
+                    element.disabled = false;
+                    if (textSpan) textSpan.style.display = 'inline';
+                    if (loader) loader.classList.add('hidden');
+                }
+            }
+        };
+
+        // Authentication Module
+        const Auth = {
+            async login(username, password) {
+                try {
+                    Utils.setLoading('loginBtn', true);
+                    
+                    const data = await API.post('/auth/login', { username, password });
+                    
+                    AppState.token = data.token;
+                    AppState.currentUser = data.user;
+                    
+                    if (typeof(Storage) !== "undefined") {
+                        localStorage.setItem('dms_token', data.token);
+                    }
+                    
+                    this.showMainApp();
+                    Utils.showToast('Welcome back!', 'success');
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showError('loginError', error.message || 'Login failed');
+                } finally {
+                    Utils.setLoading('loginBtn', false);
+                }
+            },
+
+            async validateToken() {
+                try {
+                    const storedToken = localStorage.getItem('dms_token');
+                    if (!storedToken) return false;
+                    
+                    AppState.token = storedToken;
+                    const data = await API.get('/auth/validate');
+                    
+                    AppState.currentUser = data.user;
+                    return true;
+                } catch (error) {
+                    console.error('Token validation failed:', error);
+                    if (typeof(Storage) !== "undefined") {
+                        localStorage.removeItem('dms_token');
+                    }
+                    return false;
+                }
+            },
+
+            logout() {
+                AppState.token = null;
+                AppState.currentUser = null;
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.removeItem('dms_token');
+                }
+                this.showLogin();
+                Utils.showToast('Logged out successfully', 'info');
+            },
+
+            showLogin() {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            },
+
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.updateUserInfo();
+                this.updateAdminControls();
+                Projects.load();
+            },
+
+            updateUserInfo() {
+                const user = AppState.currentUser;
+                const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username;
+                
+                document.getElementById('userDisplay').textContent = displayName;
+                document.getElementById('userRole').textContent = user.role_name || 'No Role';
+                document.getElementById('userAvatar').textContent = Utils.generateAvatar(displayName);
+            },
+
+            updateAdminControls() {
+                const user = AppState.currentUser;
+                const hasAdminAccess = user.permissions && user.permissions.includes('admin_access');
+                
+                if (hasAdminAccess) {
+                    document.getElementById('adminControls').classList.remove('hidden');
+                    document.getElementById('regularControls').classList.add('hidden');
+                } else {
+                    document.getElementById('adminControls').classList.add('hidden');
+                    document.getElementById('regularControls').classList.remove('hidden');
+                }
+            },
+
+            showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                element.textContent = message;
+                element.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    element.classList.add('hidden');
+                }, 5000);
+            }
+        };
+
+        // Project Management
+        const Projects = {
+            async load() {
+                try {
+                    const container = document.getElementById('projectGrid');
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <h3>Loading projects...</h3>
+                            <div class="loading"></div>
+                        </div>
+                    `;
+                    
+                    const projects = await API.get('/projects');
+                    AppState.projects = projects;
+                    
+                    this.display(projects);
+                    
+                } catch (error) {
+                    console.error('Projects load error:', error);
+                    Utils.showToast('Failed to load projects: ' + error.message, 'error');
+                    this.showError();
+                }
+            },
+
+            display(projects) {
+                const container = document.getElementById('projectGrid');
+                
+                if (projects.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <h3>No projects available</h3>
+                            <p>Contact your administrator to set up document projects.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = projects.map(project => `
+                    <div class="project-card" 
+                         data-project-id="${project.id}" 
+                         style="--project-color: ${project.color || '#667eea'}"
+                         onclick="Projects.select(${project.id})">
+                        <div class="project-title">
+                            ${Utils.getProjectTypeIcon(project.type)} ${Utils.sanitizeInput(project.name)}
+                        </div>
+                        <div class="project-description">
+                            ${Utils.sanitizeInput(project.description || 'No description')}
+                        </div>
+                        <div class="project-stats">
+                            <span>📄 ${project.document_count || 0} documents</span>
+                            <span>🔍 ${project.index_fields?.length || 0} search fields</span>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); showAddDocumentModal()">
+                                📤 Add Document
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            showError() {
+                const container = document.getElementById('projectGrid');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Failed to load projects</h3>
+                        <p>Please check your connection and try again.</p>
+                        <button class="btn btn-primary" onclick="Projects.load()">Retry</button>
+                    </div>
+                `;
+            },
+
+            select(projectId) {
+                document.querySelectorAll('.project-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+
+                const projectCard = document.querySelector(`[data-project-id="${projectId}"]`);
+                projectCard.classList.add('selected');
+
+                AppState.selectedProject = AppState.projects.find(p => p.id === projectId);
+                
+                this.setupSearchForm();
+                
+                const addDocBtn = document.getElementById('addDocumentBtn');
+                if (AppState.currentUser.permissions.includes('document_create') || AppState.currentUser.permissions.includes('admin_access')) {
+                    addDocBtn.style.display = 'inline-flex';
+                }
+                
+                Search.clearResults();
+                
+                Utils.showToast(`Selected project: ${AppState.selectedProject.name}`, 'success');
+            },
+
+            setupSearchForm() {
+                const searchForm = document.getElementById('searchForm');
+                const searchFields = document.getElementById('searchFields');
+                
+                if (!AppState.selectedProject) {
+                    searchForm.classList.remove('active');
+                    return;
+                }
+
+                searchFields.innerHTML = AppState.selectedProject.index_fields.map(field => `
+                    <div class="form-group">
+                        <label for="search_${field.name}">${Utils.sanitizeInput(field.label)}</label>
+                        ${this.createSearchInput(field)}
+                    </div>
+                `).join('');
+
+                searchForm.classList.add('active');
+            },
+
+            createSearchInput(field) {
+                const id = `search_${field.name}`;
+                
+                switch (field.type) {
+                    case 'dropdown':
+                        return `
+                            <select id="${id}" class="form-control">
+                                <option value="">Any ${field.label}</option>
+                                ${(field.options || []).map(opt => 
+                                    `<option value="${Utils.sanitizeInput(opt)}">${Utils.sanitizeInput(opt)}</option>`
+                                ).join('')}
+                            </select>
+                        `;
+                    case 'date':
+                        return `
+                            <div class="range-input">
+                                <input type="date" id="${id}_from" class="form-control">
+                                <span>to</span>
+                                <input type="date" id="${id}_to" class="form-control">
+                            </div>
+                        `;
+                    case 'number':
+                        return `
+                            <div class="range-input">
+                                <input type="number" id="${id}_min" class="form-control" placeholder="Min ${field.label.toLowerCase()}">
+                                <span>to</span>
+                                <input type="number" id="${id}_max" class="form-control" placeholder="Max ${field.label.toLowerCase()}">
+                            </div>
+                        `;
+                    default:
+                        return `<input type="text" id="${id}" class="form-control" placeholder="Enter ${field.label.toLowerCase()}">`;
+                }
+            }
+        };
+
+        // Search Management
+        const Search = {
+            currentTab: 'basic',
+
+            switchTab(tabName) {
+                document.querySelectorAll('.search-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+
+                document.querySelectorAll('.search-panel').forEach(panel => {
+                    panel.classList.toggle('active', panel.id === `${tabName}SearchPanel`);
+                });
+
+                this.currentTab = tabName;
+            },
+
+            async perform() {
+                if (!AppState.selectedProject) {
+                    Utils.showToast('Please select a project first', 'warning');
+                    return;
+                }
+
+                document.getElementById('searchStatus').innerHTML = '<span class="loading"></span> Searching...';
+
+                try {
+                    const documents = await API.get(`/projects/${AppState.selectedProject.id}/documents`);
+                    
+                    let filteredDocuments = documents;
+                    
+                    if (this.currentTab === 'fulltext') {
+                        const query = document.getElementById('fulltextQuery').value.trim();
+                        if (!query) {
+                            Utils.showToast('Please enter a search query', 'warning');
+                            return;
+                        }
+                        filteredDocuments = this.filterFullText(documents, query);
+                    } else {
+                        const criteria = this.getSearchCriteria();
+                        filteredDocuments = this.filterDocuments(documents, criteria);
+                    }
+                    
+                    AppState.searchResults = filteredDocuments;
+                    this.displayResults(filteredDocuments);
+                    
+                    Utils.showToast(`Found ${filteredDocuments.length} documents`, 'success');
+                    
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    Utils.showToast('Search failed: ' + error.message, 'error');
+                } finally {
+                    setTimeout(() => {
+                        document.getElementById('searchStatus').textContent = '';
+                    }, 2000);
+                }
+            },
+
+            getSearchCriteria() {
+                const criteria = {};
+                
+                if (this.currentTab === 'basic' || this.currentTab === 'advanced') {
+                    const container = document.getElementById('searchFields');
+                    container.querySelectorAll('.form-control').forEach(input => {
+                        if (input.value.trim()) {
+                            const fieldName = input.id.replace('search_', '').replace(/_from|_to|_min|_max/, '');
+                            if (!criteria[fieldName]) criteria[fieldName] = {};
+                            
+                            if (input.id.includes('_from')) {
+                                criteria[fieldName].from = input.value.trim();
+                            } else if (input.id.includes('_to')) {
+                                criteria[fieldName].to = input.value.trim();
+                            } else if (input.id.includes('_min')) {
+                                criteria[fieldName].min = input.value.trim();
+                            } else if (input.id.includes('_max')) {
+                                criteria[fieldName].max = input.value.trim();
+                            } else {
+                                criteria[fieldName] = input.value.trim();
+                            }
+                        }
+                    });
+                }
+                
+                if (this.currentTab === 'advanced') {
+                    const createdBy = document.getElementById('advCreatedBy').value.trim();
+                    if (createdBy) criteria.created_by = createdBy;
+                    
+                    const dateFrom = document.getElementById('advDateFrom').value;
+                    const dateTo = document.getElementById('advDateTo').value;
+                    if (dateFrom || dateTo) {
+                        criteria.created_date = {};
+                        if (dateFrom) criteria.created_date.from = dateFrom;
+                        if (dateTo) criteria.created_date.to = dateTo;
+                    }
+                    
+                    const pageCountMin = document.getElementById('advPageCountMin').value;
+                    const pageCountMax = document.getElementById('advPageCountMax').value;
+                    if (pageCountMin || pageCountMax) {
+                        criteria.page_count = {};
+                        if (pageCountMin) criteria.page_count.min = parseInt(pageCountMin);
+                        if (pageCountMax) criteria.page_count.max = parseInt(pageCountMax);
+                    }
+                }
+                
+                return criteria;
+            },
+
+            filterDocuments(documents, criteria) {
+                if (Object.keys(criteria).length === 0) {
+                    return documents;
+                }
+
+                return documents.filter(doc => {
+                    return Object.entries(criteria).every(([field, value]) => {
+                        if (field === 'created_by') {
+                            return doc.created_by_name?.toLowerCase().includes(value.toLowerCase());
+                        }
+
+                        if (field === 'created_date') {
+                            const docDate = new Date(doc.created_at);
+                            if (value.from && docDate < new Date(value.from)) return false;
+                            if (value.to && docDate > new Date(value.to)) return false;
+                            return true;
+                        }
+
+                        if (field === 'page_count') {
+                            if (value.min && doc.page_count < value.min) return false;
+                            if (value.max && doc.page_count > value.max) return false;
+                            return true;
+                        }
+
+                        const docValue = doc.index_values?.[field];
+                        if (!docValue) return false;
+
+                        if (typeof value === 'object') {
+                            if (value.from || value.to || value.min || value.max) {
+                                const numValue = parseFloat(docValue);
+                                if (value.min && numValue < parseFloat(value.min)) return false;
+                                if (value.max && numValue > parseFloat(value.max)) return false;
+                                if (value.from && new Date(docValue) < new Date(value.from)) return false;
+                                if (value.to && new Date(docValue) > new Date(value.to)) return false;
+                                return true;
+                            }
+                        } else {
+                            if (typeof docValue === 'string') {
+                                return docValue.toLowerCase().includes(value.toLowerCase());
+                            } else if (typeof docValue === 'number') {
+                                return docValue.toString().includes(value);
+                            } else {
+                                return docValue.toString() === value;
+                            }
+                        }
+
+                        return true;
+                    });
+                });
+            },
+
+            filterFullText(documents, query) {
+                const searchTitles = document.getElementById('searchTitles').checked;
+                const searchDescriptions = document.getElementById('searchDescriptions').checked;
+                
+                return documents.filter(doc => {
+                    const queryLower = query.toLowerCase();
+                    let searchableText = '';
+                    
+                    if (searchTitles) {
+                        searchableText += ' ' + (doc.title || '').toLowerCase();
+                    }
+                    if (searchDescriptions) {
+                        searchableText += ' ' + (doc.description || '').toLowerCase();
+                    }
+                    
+                    searchableText += ' ' + Object.values(doc.index_values || {}).join(' ').toLowerCase();
+                    
+                    return searchableText.includes(queryLower);
+                });
+            },
+
+            displayResults(results) {
+                const resultsSection = document.getElementById('resultsSection');
+                const documentGrid = document.getElementById('documentGrid');
+                const resultsCount = document.getElementById('resultsCount');
+                
+                resultsCount.textContent = `${results.length} document${results.length !== 1 ? 's' : ''} found`;
+                
+                if (results.length === 0) {
+                    documentGrid.innerHTML = `
+                        <div class="no-results">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                            <h3>No documents found</h3>
+                            <p>Try adjusting your search criteria or clearing some filters.</p>
+                            <button class="btn btn-outline" onclick="clearSearch()">Clear Search</button>
+                        </div>
+                    `;
+                } else {
+                    documentGrid.innerHTML = results.map(doc => this.createDocumentCard(doc)).join('');
+                }
+                
+                resultsSection.classList.add('active');
+            },
+
+            createDocumentCard(doc) {
+                const pageCount = doc.page_count || doc.total_pages || 0;
+                
+                return `
+                    <div class="document-card ${AppState.currentView}-view" onclick="Documents.view(${doc.id})">
+                        <div class="document-header">
+                            <div class="document-title">
+                                ${Utils.getFileTypeIcon(doc.title)} ${Utils.sanitizeInput(doc.title)}
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); quickDownload(${doc.id})" title="Quick Download">⬇️</button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); toggleQuickFavorite(${doc.id})" title="Toggle Favorite">☆</button>
+                                ${Documents.canDeleteDocument() ? `
+                                    <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); Documents.delete(${doc.id}, '${Utils.sanitizeInput(doc.title).replace(/'/g, "\\'")}', true)" title="Delete Document">🗑️</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="document-description">
+                            ${Utils.sanitizeInput(doc.description || 'No description')}
+                        </div>
+                        <div class="document-fields">
+                            ${Object.entries(doc.index_values || {}).slice(0, 3).map(([key, value]) => {
+                                let displayValue = value;
+                                
+                                const field = AppState.selectedProject?.index_fields?.find(f => f.name === key);
+                                if (field) {
+                                    if (field.type === 'number' && (key.includes('amount') || key.includes('value'))) {
+                                        displayValue = Utils.formatCurrency(parseFloat(value));
+                                    } else if (field.type === 'date') {
+                                        displayValue = Utils.formatDate(value);
+                                    }
+                                }
+                                
+                                return `
+                                    <div class="field-row">
+                                        <span class="field-label">${Utils.sanitizeInput(key.replace('_', ' '))}:</span>
+                                        <span class="field-value">${Utils.sanitizeInput(displayValue)}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${Object.keys(doc.index_values || {}).length > 3 ? 
+                                `<div class="field-row">
+                                    <span class="field-label">+${Object.keys(doc.index_values).length - 3} more fields</span>
+                                </div>` : ''}
+                        </div>
+                        <div class="document-meta">
+                            <span>👤 ${Utils.sanitizeInput(doc.created_by_name || 'Unknown')}</span>
+                            <span>📄 ${pageCount} page${pageCount !== 1 ? 's' : ''}</span>
+                            <span>📅 ${Utils.formatDate(doc.created_at)}</span>
+                        </div>
+                    </div>
+                `;
+            },
+
+            clear() {
+                document.querySelectorAll('.search-panel .form-control').forEach(input => {
+                    if (input.type === 'checkbox') {
+                        input.checked = input.id === 'searchTitles' || input.id === 'searchDescriptions';
+                    } else {
+                        input.value = '';
+                    }
+                });
+                
+                this.clearResults();
+                
+                Utils.showToast('Search cleared', 'info');
+            },
+
+            clearResults() {
+                const resultsSection = document.getElementById('resultsSection');
+                resultsSection.classList.remove('active');
+                AppState.searchResults = [];
+            }
+        };
+
+        // Enhanced Document Management with Page Viewing and Editing
+        const Documents = {
+            isEditing: false,
+            showIndexInfo: false,
+            showDocumentInfo: true,
+            
+            async view(documentId) {
+                try {
+                    Utils.showToast('Loading document...', 'info');
+                    
+                    const documentData = await API.get(`/documents/${documentId}`);
+                    const pages = await API.get(`/documents/${documentId}/pages`);
+                    
+                    AppState.currentDocument = documentData;
+                    this.isEditing = false;
+                    this.showModal(documentData, pages);
+                    
+                } catch (error) {
+                    Utils.showToast('Failed to load document: ' + error.message, 'error');
+                }
+            },
+
+            showModal(documentData, pages) {
+                const modal = document.getElementById('documentModal');
+                const title = document.getElementById('modalDocumentTitle');
+                const info = document.getElementById('documentInfo');
+                const pageGrid = document.getElementById('pageGrid');
+                
+                // Reset toggle states for new document
+                this.showIndexInfo = false;
+                this.showDocumentInfo = true;
+                
+                // Update modal header with edit buttons
+                const modalHeader = title.parentElement;
+                modalHeader.innerHTML = `
+                    <h3 id="modalDocumentTitle">${Utils.getFileTypeIcon(documentData.title)} ${documentData.title}</h3>
+                    <div class="modal-header-actions">
+                        ${this.canEditDocument() ? `
+                            <button id="editDocumentBtn" class="btn btn-outline btn-sm" onclick="Documents.toggleEdit()" style="display: ${this.isEditing ? 'none' : 'inline-flex'}; color: white; border-color: white;">
+                                ✏️ Edit Fields
+                            </button>
+                            <button id="saveDocumentBtn" class="btn btn-success btn-sm" onclick="Documents.saveChanges()" style="display: ${this.isEditing ? 'inline-flex' : 'none'};">
+                                💾 Save Changes
+                            </button>
+                            <button id="cancelEditBtn" class="btn btn-secondary btn-sm" onclick="Documents.cancelEdit()" style="display: ${this.isEditing ? 'inline-flex' : 'none'};">
+                                ❌ Cancel
+                            </button>
+                        ` : ''}
+                        <button class="close-btn" onclick="closeModal()">&times;</button>
+                    </div>
+                `;
+                
+                // Display document information
+                this.renderDocumentInfo(documentData);
+                
+                // Reset and update the toggle buttons
+                const infoToggleBtn = document.getElementById('infoToggleBtn');
+                if (infoToggleBtn) {
+                    infoToggleBtn.textContent = '📄 Hide Document Info';
+                    infoToggleBtn.classList.add('active');
+                }
+                
+                const indexToggleBtn = document.getElementById('indexToggleBtn');
+                if (indexToggleBtn) {
+                    indexToggleBtn.textContent = '📋 Show Index Info';
+                    indexToggleBtn.classList.remove('active');
+                }
+                
+                // Display pages
+                this.displayPages(pages, pageGrid);
+                
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            renderDocumentInfo(documentData) {
+                const info = document.getElementById('documentInfo');
+                
+                info.innerHTML = `
+                    <h4>Document Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Title</div>
+                            <div class="info-value">${Utils.sanitizeInput(documentData.title)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Description</div>
+                            <div class="info-value">${Utils.sanitizeInput(documentData.description || 'No description')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Project</div>
+                            <div class="info-value">${Utils.sanitizeInput(documentData.project_name || 'Unknown')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Created By</div>
+                            <div class="info-value">${Utils.sanitizeInput(documentData.created_by_name || 'Unknown')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Created Date</div>
+                            <div class="info-value">${Utils.formatDate(documentData.created_at)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Pages</div>
+                            <div class="info-value">${AppState.currentDocument?.page_count || 0}</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 2rem; margin-bottom: 1rem;">Index Field Values</h4>
+                    <div id="indexFieldsContainer">
+                        ${this.renderIndexFields(documentData)}
+                    </div>
+                `;
+            },
+
+            renderIndexFields(documentData) {
+                if (!AppState.selectedProject?.index_fields || AppState.selectedProject.index_fields.length === 0) {
+                    return '<p style="color: var(--text-light);">No index fields configured for this project.</p>';
+                }
+
+                return `
+                    <div class="info-grid" id="indexFieldsGrid">
+                        ${AppState.selectedProject.index_fields.map(field => {
+                            const value = documentData.index_values?.[field.name] || '';
+                            let displayValue = value;
+                            
+                            // Format display value based on field type
+                            if (field.type === 'number' && (field.name.includes('amount') || field.name.includes('value'))) {
+                                displayValue = value ? Utils.formatCurrency(parseFloat(value)) : '';
+                            } else if (field.type === 'date' && value) {
+                                displayValue = Utils.formatDate(value);
+                            }
+                            
+                            const fieldLabel = Utils.sanitizeInput(field.label.replace(/\b\w/g, l => l.toUpperCase()));
+                            
+                            return `
+                                <div class="info-item" data-field="${field.name}">
+                                    <div class="info-label">${fieldLabel}</div>
+                                    <div class="info-value" id="display_${field.name}" style="display: ${this.isEditing ? 'none' : 'block'};">
+                                        ${Utils.sanitizeInput(displayValue || 'Not set')}
+                                    </div>
+                                    <div class="info-edit" id="edit_${field.name}" style="display: ${this.isEditing ? 'block' : 'none'};">
+                                        ${this.createEditInput(field, value)}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            },
+
+            createEditInput(field, value) {
+                const id = `input_${field.name}`;
+                const required = field.required ? 'required' : '';
+                
+                switch (field.type) {
+                    case 'dropdown':
+                        return `
+                            <select id="${id}" class="form-control" ${required}>
+                                <option value="">Select ${field.label}</option>
+                                ${(field.options || []).map(opt => 
+                                    `<option value="${Utils.sanitizeInput(opt)}" ${value === opt ? 'selected' : ''}>${Utils.sanitizeInput(opt)}</option>`
+                                ).join('')}
+                            </select>
+                        `;
+                    case 'date':
+                        return `<input type="date" id="${id}" class="form-control" value="${value}" ${required}>`;
+                    case 'number':
+                        return `<input type="number" id="${id}" class="form-control" value="${value}" placeholder="Enter ${field.label.toLowerCase()}" ${required}>`;
+                    case 'checkbox':
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="${id}" ${value === 'true' || value === true ? 'checked' : ''} ${required}>
+                                <label for="${id}" style="margin: 0;">${field.label}</label>
+                            </div>
+                        `;
+                    default:
+                        return `<input type="text" id="${id}" class="form-control" value="${Utils.sanitizeInput(value)}" placeholder="Enter ${field.label.toLowerCase()}" ${required}>`;
+                }
+            },
+
+            canEditDocument() {
+                return AppState.currentUser.permissions.includes('document_edit') || 
+                       AppState.currentUser.permissions.includes('admin_access');
+            },
+
+            canDeleteDocument() {
+                return AppState.currentUser.permissions.includes('document_delete') || 
+                       AppState.currentUser.permissions.includes('admin_access');
+            },
+
+            toggleEdit() {
+                this.isEditing = true;
+                this.updateEditButtons();
+                this.renderDocumentInfo(AppState.currentDocument);
+            },
+
+            cancelEdit() {
+                this.isEditing = false;
+                this.updateEditButtons();
+                this.renderDocumentInfo(AppState.currentDocument);
+            },
+
+            updateEditButtons() {
+                const editBtn = document.getElementById('editDocumentBtn');
+                const saveBtn = document.getElementById('saveDocumentBtn');
+                const cancelBtn = document.getElementById('cancelEditBtn');
+                
+                if (editBtn) editBtn.style.display = this.isEditing ? 'none' : 'inline-flex';
+                if (saveBtn) saveBtn.style.display = this.isEditing ? 'inline-flex' : 'none';
+                if (cancelBtn) cancelBtn.style.display = this.isEditing ? 'inline-flex' : 'none';
+            },
+
+            async saveChanges() {
+                try {
+                    Utils.showToast('Saving changes...', 'info');
+                    
+                    // Collect updated field values
+                    const updatedValues = {};
+                    
+                    AppState.selectedProject.index_fields.forEach(field => {
+                        const input = document.getElementById(`input_${field.name}`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                updatedValues[field.name] = input.checked;
+                            } else {
+                                updatedValues[field.name] = input.value.trim();
+                            }
+                        }
+                    });
+                    
+                    // Save to backend
+                    await API.put(`/documents/${AppState.currentDocument.id}`, {
+                        index_values: updatedValues
+                    });
+                    
+                    // Update local state
+                    AppState.currentDocument.index_values = updatedValues;
+                    
+                    // Exit edit mode and refresh display
+                    this.isEditing = false;
+                    this.updateEditButtons();
+                    this.renderDocumentInfo(AppState.currentDocument);
+                    
+                    Utils.showToast('Document updated successfully!', 'success');
+                    
+                    // Refresh search results if we have any
+                    if (AppState.searchResults.length > 0) {
+                        Search.perform();
+                    }
+                    
+                } catch (error) {
+                    Utils.showToast('Failed to save changes: ' + error.message, 'error');
+                }
+            },
+
+            async delete(documentId, documentTitle, fromSearchResults = false) {
+                if (!this.canDeleteDocument()) {
+                    Utils.showToast('You do not have permission to delete documents', 'error');
+                    return;
+                }
+
+                const confirmDelete = confirm(`Are you sure you want to delete the document "${documentTitle}"?\n\nThis will mark the document and all its pages as inactive. This action cannot be undone.`);
+                if (!confirmDelete) {
+                    return;
+                }
+
+                try {
+                    Utils.showToast('Deleting document...', 'info');
+                    
+                    await API.delete(`/documents/${documentId}`);
+                    
+                    Utils.showToast('Document deleted successfully', 'success');
+                    
+                    // Close modal if we're viewing the deleted document
+                    if (!fromSearchResults && AppState.currentDocument?.id === documentId) {
+                        closeModal();
+                    }
+                    
+                    // Refresh search results
+                    if (AppState.searchResults.length > 0) {
+                        Search.perform();
+                    }
+                    
+                } catch (error) {
+                    Utils.showToast('Failed to delete document: ' + error.message, 'error');
+                }
+            },
+
+            displayPages(pages, container) {
+                if (pages.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">📄</div>
+                            <p>No pages found for this document</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = pages.map(page => `
+                    <div class="page-card" onclick="Documents.viewPage(${page.id})" title="Click to view full size">
+                        <div class="page-thumbnail">
+                            <img id="thumb-${page.id}" alt="Page ${page.page_number}" style="display: none;">
+                            <div id="thumb-loading-${page.id}" style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light);">
+                                📄
+                            </div>
+                        </div>
+                        <div class="page-info">
+                            <div class="page-number">Page ${page.page_number}</div>
+                            <div class="page-source">
+                                <span class="${page.source_type}-badge">${page.source_type.toUpperCase()}</span>
+                                ${Utils.formatFileSize(page.file_size)}
+                            </div>
+                        </div>
+                        <div class="page-index-info ${this.showIndexInfo ? 'show' : ''}" id="page-index-${page.id}">
+                            ${this.renderPageIndexInfo()}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Load thumbnails with authentication
+                pages.forEach(page => {
+                    this.loadThumbnail(page.id);
+                });
+            },
+
+            renderPageIndexInfo() {
+                if (!AppState.currentDocument?.index_values || Object.keys(AppState.currentDocument.index_values).length === 0) {
+                    return '<div style="text-align: center; color: var(--text-light); font-style: italic;">No index data</div>';
+                }
+
+                // Show only the most important fields (first 3) to keep cards compact
+                const indexEntries = Object.entries(AppState.currentDocument.index_values).slice(0, 3);
+                
+                return indexEntries.map(([key, value]) => {
+                    let displayValue = value;
+                    
+                    // Format display value based on field type
+                    const field = AppState.selectedProject?.index_fields?.find(f => f.name === key);
+                    if (field) {
+                        if (field.type === 'number' && (key.includes('amount') || key.includes('value'))) {
+                            displayValue = Utils.formatCurrency(parseFloat(value));
+                        } else if (field.type === 'date') {
+                            displayValue = Utils.formatDate(value);
+                        } else if (field.type === 'checkbox') {
+                            displayValue = value ? 'Yes' : 'No';
+                        }
+                    }
+                    
+                    // Truncate long values
+                    if (typeof displayValue === 'string' && displayValue.length > 20) {
+                        displayValue = displayValue.substring(0, 17) + '...';
+                    }
+                    
+                    const fieldLabel = field ? field.label : key.replace(/_/g, ' ');
+                    
+                    return `
+                        <div class="page-index-field">
+                            <span class="page-index-label">${Utils.sanitizeInput(fieldLabel)}:</span>
+                            <span class="page-index-value" title="${Utils.sanitizeInput(value)}">${Utils.sanitizeInput(displayValue)}</span>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            toggleIndexInfo() {
+                this.showIndexInfo = !this.showIndexInfo;
+                
+                const toggleBtn = document.getElementById('indexToggleBtn');
+                const indexInfoElements = document.querySelectorAll('.page-index-info');
+                
+                if (this.showIndexInfo) {
+                    toggleBtn.textContent = '📋 Hide Index Info';
+                    toggleBtn.classList.add('active');
+                    indexInfoElements.forEach(el => el.classList.add('show'));
+                    Utils.showToast('Index information shown', 'info');
+                } else {
+                    toggleBtn.textContent = '📋 Show Index Info';
+                    toggleBtn.classList.remove('active');
+                    indexInfoElements.forEach(el => el.classList.remove('show'));
+                    Utils.showToast('Index information hidden', 'info');
+                }
+            },
+
+            toggleDocumentInfo() {
+                this.showDocumentInfo = !this.showDocumentInfo;
+                
+                const toggleBtn = document.getElementById('infoToggleBtn');
+                const documentInfo = document.getElementById('documentInfo');
+                
+                if (this.showDocumentInfo) {
+                    toggleBtn.textContent = '📄 Hide Document Info';
+                    toggleBtn.classList.add('active');
+                    documentInfo.classList.remove('hidden-info');
+                    Utils.showToast('Document information shown', 'info');
+                } else {
+                    toggleBtn.textContent = '📄 Show Document Info';
+                    toggleBtn.classList.remove('active');
+                    documentInfo.classList.add('hidden-info');
+                    Utils.showToast('Document information hidden - showing pages only', 'info');
+                }
+            },
+
+            async loadThumbnail(pageId) {
+                try {
+                    const response = await fetch(`${AppState.apiBase}/pages/${pageId}/thumbnail`, {
+                        headers: {
+                            'Authorization': `Bearer ${AppState.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const imageUrl = URL.createObjectURL(blob);
+                        
+                        const imgElement = document.getElementById(`thumb-${pageId}`);
+                        const loadingElement = document.getElementById(`thumb-loading-${pageId}`);
+                        
+                        if (imgElement && loadingElement) {
+                            imgElement.src = imageUrl;
+                            imgElement.style.display = 'block';
+                            imgElement.style.width = '100%';
+                            imgElement.style.height = '100%';
+                            imgElement.style.objectFit = 'cover';
+                            loadingElement.style.display = 'none';
+                            
+                            imgElement.onload = () => {
+                                imgElement.dataset.blobUrl = imageUrl;
+                            };
+                        }
+                    } else {
+                        console.warn(`Failed to load thumbnail for page ${pageId}: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Error loading thumbnail for page ${pageId}:`, error);
+                }
+            },
+
+            async viewPage(pageId) {
+                try {
+                    const pageUrl = `${AppState.apiBase}/pages/${pageId}/content`;
+                    window.open(pageUrl, '_blank');
+                } catch (error) {
+                    Utils.showToast('Failed to load page: ' + error.message, 'error');
+                }
+            },
+
+            async create(documentData, files) {
+                try {
+                    console.log('📝 Creating document record...');
+                    console.log('📝 Document data:', documentData);
+                    
+                    const createdDocument = await API.post(`/projects/${AppState.selectedProject.id}/documents`, documentData);
+                    console.log('✅ Document created with ID:', createdDocument.id);
+                    
+                    if (files && files.length > 0) {
+                        console.log(`📤 Uploading ${files.length} files to document ${createdDocument.id}...`);
+                        
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            console.log(`📤 Uploading file ${i + 1}/${files.length}: ${file.name} to document ${createdDocument.id}`);
+                            
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            
+                            const uploadResult = await API.uploadFile(`/documents/${createdDocument.id}/pages`, formData);
+                            console.log(`✅ Upload result for ${file.name}:`, uploadResult);
+                            
+                            if (file.type === 'application/pdf' && uploadResult.file_type === 'pdf') {
+                                Utils.showToast(`PDF "${file.name}" split into ${uploadResult.total_pages} pages`, 'success');
+                                console.log(`📄 PDF "${file.name}" split into ${uploadResult.total_pages} pages for document ${createdDocument.id}`);
+                            } else {
+                                console.log(`🖼️ Image "${file.name}" added as 1 page to document ${createdDocument.id}`);
+                            }
+                        }
+                        
+                        console.log(`✅ All ${files.length} files uploaded successfully to document ${createdDocument.id}`);
+                    } else {
+                        console.log('ℹ️ No files to upload');
+                    }
+                    
+                    return createdDocument;
+                    
+                } catch (error) {
+                    console.error('❌ Document creation error:', error);
+                    throw new Error('Failed to create document: ' + error.message);
+                }
+            }
+        };
+
+        // Document Upload Module
+        const DocumentUpload = {
+            initializeUploadArea() {
+                const uploadArea = document.getElementById('fileUploadArea');
+                const fileInput = document.getElementById('fileInput');
+
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                });
+
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('drag-over');
+                });
+
+                uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('drag-over');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('drag-over');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+            },
+
+            handleFiles(files) {
+                const validFiles = Array.from(files).filter(file => {
+                    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/tiff'];
+                    return validTypes.includes(file.type) || file.name.toLowerCase().match(/\.(pdf|jpg|jpeg|png|tiff|tif)$/);
+                });
+
+                if (validFiles.length !== files.length) {
+                    Utils.showToast('Some files were skipped due to invalid format', 'warning');
+                }
+
+                AppState.uploadFiles = [...AppState.uploadFiles, ...validFiles];
+                this.updateFileList();
+            },
+
+            updateFileList() {
+                const fileList = document.getElementById('fileList');
+                
+                if (AppState.uploadFiles.length === 0) {
+                    fileList.innerHTML = '';
+                    return;
+                }
+
+                fileList.innerHTML = AppState.uploadFiles.map((file, index) => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            ${Utils.getFileTypeIcon(file.name)}
+                            <span>${Utils.sanitizeInput(file.name)}</span>
+                            <span class="file-size">(${Utils.formatFileSize(file.size)})</span>
+                            ${file.type === 'application/pdf' ? '<span class="pdf-badge">PDF</span>' : ''}
+                        </div>
+                        <button type="button" class="file-remove" onclick="DocumentUpload.removeFile(${index})" title="Remove file">
+                            ×
+                        </button>
+                    </div>
+                `).join('');
+            },
+
+            removeFile(index) {
+                AppState.uploadFiles.splice(index, 1);
+                this.updateFileList();
+            },
+
+            setupDynamicFields() {
+                const container = document.getElementById('dynamicIndexFields');
+                
+                if (!AppState.selectedProject || !AppState.selectedProject.index_fields) {
+                    container.innerHTML = '<p style="color: var(--text-light);">No index fields configured for this project.</p>';
+                    return;
+                }
+
+                const fieldsHtml = AppState.selectedProject.index_fields.map(field => {
+                    return `
+                        <div class="form-group">
+                            <label for="index_${field.name}">
+                                ${Utils.sanitizeInput(field.label)}
+                                ${field.required ? ' *' : ''}
+                            </label>
+                            ${this.createIndexInput(field)}
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="form-row">${fieldsHtml}</div>`;
+            },
+
+            createIndexInput(field) {
+                const id = `index_${field.name}`;
+                const required = field.required ? 'required' : '';
+                
+                switch (field.type) {
+                    case 'dropdown':
+                        return `
+                            <select id="${id}" class="form-control" ${required}>
+                                <option value="">Select ${field.label}</option>
+                                ${(field.options || []).map(opt => 
+                                    `<option value="${Utils.sanitizeInput(opt)}">${Utils.sanitizeInput(opt)}</option>`
+                                ).join('')}
+                            </select>
+                        `;
+                    case 'date':
+                        return `<input type="date" id="${id}" class="form-control" ${required}>`;
+                    case 'number':
+                        return `<input type="number" id="${id}" class="form-control" placeholder="Enter ${field.label.toLowerCase()}" ${required}>`;
+                    case 'checkbox':
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="${id}" ${required}>
+                                <label for="${id}" style="margin: 0;">${field.label}</label>
+                            </div>
+                        `;
+                    default:
+                        return `<input type="text" id="${id}" class="form-control" placeholder="Enter ${field.label.toLowerCase()}" ${required}>`;
+                }
+            },
+
+            getIndexValues() {
+                const values = {};
+                
+                if (!AppState.selectedProject?.index_fields) return values;
+
+                AppState.selectedProject.index_fields.forEach(field => {
+                    const input = document.getElementById(`index_${field.name}`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            values[field.name] = input.checked;
+                        } else if (input.value.trim()) {
+                            values[field.name] = input.value.trim();
+                        }
+                    }
+                });
+
+                return values;
+            },
+
+            resetForm() {
+                document.getElementById('addDocumentForm').reset();
+                AppState.uploadFiles = [];
+                this.updateFileList();
+            }
+        };
+
+        // Global Functions
+        window.logout = () => Auth.logout();
+        window.performSearch = () => Search.perform();
+        window.clearSearch = () => Search.clear();
+        window.refreshProjects = () => Projects.load();
+        window.closeModal = () => {
+            const thumbnails = document.querySelectorAll('#pageGrid img[data-blob-url]');
+            thumbnails.forEach(img => {
+                if (img.dataset.blobUrl) {
+                    URL.revokeObjectURL(img.dataset.blobUrl);
+                }
+            });
+            
+            document.getElementById('documentModal').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        window.showAddDocumentModal = () => {
+            if (!AppState.selectedProject) {
+                Utils.showToast('Please select a project first', 'warning');
+                return;
+            }
+
+            if (!AppState.currentUser.permissions.includes('document_create') && !AppState.currentUser.permissions.includes('admin_access')) {
+                Utils.showToast('You do not have permission to create documents', 'error');
+                return;
+            }
+
+            DocumentUpload.setupDynamicFields();
+            DocumentUpload.resetForm();
+            
+            const modal = document.getElementById('addDocumentModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeAddDocumentModal = () => {
+            const modal = document.getElementById('addDocumentModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            DocumentUpload.resetForm();
+        };
+
+        // Search tab switching
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('search-tab')) {
+                Search.switchTab(e.target.dataset.tab);
+            }
+        });
+
+        // View management
+        window.changeView = (viewType) => {
+            AppState.currentView = viewType;
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewType);
+            });
+            
+            const grid = document.getElementById('documentGrid');
+            grid.className = `document-grid ${viewType}-view`;
+            
+            if (AppState.searchResults.length > 0) {
+                Search.displayResults(AppState.searchResults);
+            }
+            
+            Utils.showToast(`Switched to ${viewType} view`, 'info');
+        };
+
+        window.sortResults = () => {
+            const sortBy = document.getElementById('sortOptions').value;
+            
+            AppState.searchResults.sort((a, b) => {
+                switch (sortBy) {
+                    case 'date_desc':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'date_asc':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'title_asc':
+                        return a.title.localeCompare(b.title);
+                    case 'title_desc':
+                        return b.title.localeCompare(a.title);
+                    default:
+                        return 0;
+                }
+            });
+            
+            Search.displayResults(AppState.searchResults);
+            Utils.showToast('Results sorted', 'info');
+        };
+
+        window.quickDownload = (docId) => {
+            Utils.showToast('Download feature coming soon...', 'info');
+        };
+
+        window.toggleQuickFavorite = (docId) => {
+            Utils.showToast('Favorites feature coming soon...', 'info');
+        };
+
+        window.showRecentDocuments = () => {
+            Utils.showToast('Recent documents feature coming soon...', 'info');
+        };
+
+        window.showFavoriteDocuments = () => {
+            Utils.showToast('Favorites feature coming soon...', 'info');
+        };
+
+        window.exportResults = () => {
+            if (AppState.searchResults.length === 0) {
+                Utils.showToast('No results to export', 'warning');
+                return;
+            }
+            Utils.showToast('Export feature coming soon...', 'info');
+        };
+
+        window.debugPageCounts = async () => {
+            if (!AppState.currentUser.permissions.includes('admin_access')) {
+                Utils.showToast('Admin access required', 'error');
+                return;
+            }
+            
+            try {
+                const result = await API.get('/debug/documents');
+                console.log('📊 Page Count Debug Report:', result);
+                Utils.showToast(`Found ${result.mismatched_documents} documents with page count issues`, 'info');
+                
+                if (result.mismatched_documents > 0) {
+                    const fix = confirm(`Found ${result.mismatched_documents} documents with incorrect page counts. Fix them now?`);
+                    if (fix) {
+                        const fixResult = await API.post('/debug/fix-page-counts', {});
+                        Utils.showToast(fixResult.message, 'success');
+                        if (AppState.selectedProject) {
+                            Search.perform();
+                        }
+                    }
+                }
+            } catch (error) {
+                Utils.showToast('Debug failed: ' + error.message, 'error');
+            }
+        };
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            await Auth.login(username, password);
+        });
+
+        // Add document form handler
+        document.getElementById('addDocumentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (AppState.isSubmitting) {
+                console.log('⚠️ Form already submitting, ignoring duplicate submission');
+                Utils.showToast('Please wait, already processing...', 'warning');
+                return;
+            }
+            
+            try {
+                AppState.isSubmitting = true;
+                Utils.setLoading('submitDocumentBtn', true);
+                
+                console.log('🚀 Starting document creation...');
+                console.log('📁 Files to upload:', AppState.uploadFiles.length);
+                AppState.uploadFiles.forEach((file, i) => {
+                    console.log(`  File ${i + 1}: ${file.name} (${file.type})`);
+                });
+                
+                const title = document.getElementById('docTitle').value.trim();
+                const description = document.getElementById('docDescription').value.trim();
+                const document_type = document.getElementById('docType').value;
+                const index_values = DocumentUpload.getIndexValues();
+                
+                if (!title) {
+                    Utils.showToast('Document title is required', 'error');
+                    return;
+                }
+                
+                if (AppState.uploadFiles.length === 0) {
+                    const confirmNoFiles = confirm('No files selected. Create document without files?');
+                    if (!confirmNoFiles) {
+                        return;
+                    }
+                }
+                
+                const documentData = {
+                    title,
+                    description,
+                    document_type,
+                    index_values
+                };
+                
+                console.log('📝 Creating document with data:', documentData);
+                const createdDocument = await Documents.create(documentData, AppState.uploadFiles);
+                console.log('✅ Document created successfully:', createdDocument);
+                
+                Utils.showToast('Document created successfully!', 'success');
+                closeAddDocumentModal();
+                
+                if (AppState.searchResults.length > 0) {
+                    performSearch();
+                }
+                
+            } catch (error) {
+                console.error('❌ Document creation failed:', error);
+                Utils.showToast(error.message, 'error');
+            } finally {
+                AppState.isSubmitting = false;
+                Utils.setLoading('submitDocumentBtn', false);
+            }
+        });
+
+        // Modal close on backdrop click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                if (e.target.id === 'documentModal') {
+                    closeModal();
+                } else if (e.target.id === 'addDocumentModal') {
+                    closeAddDocumentModal();
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeAddDocumentModal();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchFields').querySelector('.form-control')?.focus();
+            }
+        });
+
+        // Event Handlers
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 Enhanced Document Search & Viewer Interface Loading...');
+            console.log('🔄 PDF page splitting enabled');
+            console.log('✏️ Document field editing enabled');
+            console.log('🗑️ Document soft delete enabled');
+            console.log('📋 Page index info toggle enabled');
+            console.log('📄 Document info toggle enabled');
+            
+            DocumentUpload.initializeUploadArea();
+            
+            const isAuthenticated = await Auth.validateToken();
+            
+            if (isAuthenticated) {
+                Auth.showMainApp();
+            } else {
+                Auth.showLogin();
+            }
+        });
+
+        console.log('✅ Enhanced Document Search & Viewer Interface Ready');
+        console.log('🔗 Connected to API at:', AppState.apiBase);
+        console.log('📑 PDF page splitting ready');
+        console.log('✏️ Document editing ready');
+        console.log('🗑️ Soft delete ready');
+        console.log('📋 Page index info toggle ready');
+        console.log('📄 Document info toggle ready');
+    </script>
+</body>
+</html>

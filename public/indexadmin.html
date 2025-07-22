@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Document Management System</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #764ba2;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --border-color: #e1e5e9;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e3f2fd 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 2;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-box h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .navigation {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            color: var(--text-dark);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .admin-section {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: var(--text-dark);
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: var(--white);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--light-bg);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .data-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+
+        .status-deleted {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            max-height: 90vh;
+            width: 600px;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: var(--info-color);
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: var(--success-color);
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: var(--warning-color);
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: var(--danger-color);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-left: 4px solid;
+            animation: toastSlideIn 0.3s ease-out;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.toast-success {
+            border-left-color: var(--success-color);
+        }
+
+        .toast.toast-error {
+            border-left-color: var(--danger-color);
+        }
+
+        .toast.toast-info {
+            border-left-color: var(--info-color);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--light-bg);
+            border-radius: 4px;
+        }
+
+        .role-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .role-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--light-bg);
+            border-radius: 4px;
+        }
+
+        /* NEW: Dropdown options styling */
+        .dropdown-options {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dropdown-options label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .option-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .add-option-btn {
+            padding: 8px 12px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .add-option-btn:hover {
+            background: #218838;
+        }
+
+        .option-list {
+            margin-top: 0.5rem;
+        }
+
+        .option-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .remove-option-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .admin-section {
+                padding: 1.5rem;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🔧 Admin Panel</h1>
+            <p style="margin-bottom: 2rem; color: var(--text-light);">Administrative Access Required</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-control" required autocomplete="username" value="admin">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required autocomplete="current-password" value="admin123">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
+                    <span id="loginBtnText">Sign In</span>
+                    <span id="loginLoader" class="loading hidden"></span>
+                </button>
+            </form>
+            
+            <div id="loginError" class="alert alert-error hidden" style="margin-top: 1rem;"></div>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; font-size: 0.9rem; color: var(--text-light);">
+                <strong>Demo Credentials:</strong><br>
+                Username: admin<br>
+                Password: admin123
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container hidden">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔧 Administrative Control Panel</h1>
+            <p>Manage users, roles, and projects for your Document Management System</p>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div>
+                    <div id="userDisplay" style="font-weight: 600;"></div>
+                    <div id="userRoleDisplay" style="font-size: 0.9rem; opacity: 0.8;"></div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-tab active" onclick="switchTab('users')" data-tab="users">
+                👥 User Management
+            </button>
+            <button class="nav-tab" onclick="switchTab('roles')" data-tab="roles">
+                🛡️ Role Management
+            </button>
+            <button class="nav-tab" onclick="switchTab('projects')" data-tab="projects">
+                📂 Project Management
+            </button>
+            <button class="nav-tab" onclick="switchTab('audit')" data-tab="audit">
+                📋 Audit Log
+            </button>
+            <div style="margin-left: auto; display: flex; gap: 1rem;">
+                <a href="/search" class="btn btn-info btn-sm">
+                    📄 Document Search
+                </a>
+                <a href="/" class="btn btn-outline btn-sm">
+                    🏠 Main App
+                </a>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="admin-section active" id="usersSection">
+            <div class="section-header">
+                <h2 class="section-title">👥 User Management</h2>
+                <button class="btn btn-primary" onclick="openUserModal()">
+                    ➕ Add New User
+                </button>
+            </div>
+            
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                Manage user accounts, assign roles, and control access permissions.
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="userSearch" class="form-control" placeholder="Search users..." 
+                       style="max-width: 300px;" onkeyup="filterUsers()">
+            </div>
+
+            <div id="usersTableContainer">
+                <div class="empty-state">
+                    <div class="loading"></div>
+                    <p>Loading users...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Management Section -->
+        <div class="admin-section" id="rolesSection">
+            <div class="section-header">
+                <h2 class="section-title">🛡️ Role Management</h2>
+                <button class="btn btn-primary" onclick="openRoleModal()">
+                    ➕ Add New Role
+                </button>
+            </div>
+            
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                Define roles and their associated permissions for system access control.
+            </div>
+
+            <div id="rolesTableContainer">
+                <div class="empty-state">
+                    <div class="loading"></div>
+                    <p>Loading roles...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Management Section -->
+        <div class="admin-section" id="projectsSection">
+            <div class="section-header">
+                <h2 class="section-title">📂 Project Management</h2>
+                <button class="btn btn-primary" onclick="openProjectModal()">
+                    ➕ Add New Project
+                </button>
+            </div>
+            
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                Create and manage document projects with custom fields and role assignments.
+            </div>
+
+            <div id="projectsTableContainer">
+                <div class="empty-state">
+                    <div class="loading"></div>
+                    <p>Loading projects...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Log Section -->
+        <div class="admin-section" id="auditSection">
+            <div class="section-header">
+                <h2 class="section-title">📋 Audit Log</h2>
+                <button class="btn btn-secondary" onclick="refreshAuditLog()">
+                    🔄 Refresh
+                </button>
+            </div>
+            
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                View system activity and user actions for security and compliance.
+            </div>
+
+            <div id="auditLogContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>Audit Log</h3>
+                    <p>Feature coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">👥 Add New User</h3>
+                <button class="close-btn" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userUsername">Username *</label>
+                            <input type="text" id="userUsername" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email *</label>
+                            <input type="email" id="userEmail" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userFirstName">First Name</label>
+                            <input type="text" id="userFirstName" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="userLastName">Last Name</label>
+                            <input type="text" id="userLastName" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userPassword">Password <span id="passwordNote">(leave blank to keep current)</span></label>
+                            <input type="password" id="userPassword" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role</label>
+                            <select id="userRole" class="form-control">
+                                <option value="">Select Role</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="userStatus">Status</label>
+                        <select id="userStatus" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveUserBtn">
+                            <span id="saveUserText">Save User</span>
+                            <span id="saveUserLoader" class="loading hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Modal -->
+    <div id="roleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="roleModalTitle">🛡️ Add New Role</h3>
+                <button class="close-btn" onclick="closeModal('roleModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <input type="hidden" id="roleId">
+                    <div class="form-group">
+                        <label for="roleName">Role Name *</label>
+                        <input type="text" id="roleName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="roleDescription">Description</label>
+                        <textarea id="roleDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Permissions</label>
+                        <div class="permissions-grid" id="permissionsGrid">
+                            <!-- Permissions will be loaded here -->
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('roleModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveRoleBtn">
+                            <span id="saveRoleText">Save Role</span>
+                            <span id="saveRoleLoader" class="loading hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content" style="width: 800px;">
+            <div class="modal-header">
+                <h3 id="projectModalTitle">📂 Add New Project</h3>
+                <button class="close-btn" onclick="closeModal('projectModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="projectForm">
+                    <input type="hidden" id="projectId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectName">Project Name *</label>
+                            <input type="text" id="projectName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectType">Type</label>
+                            <select id="projectType" class="form-control">
+                                <option value="custom">Custom</option>
+                                <option value="finance">Finance</option>
+                                <option value="hr">Human Resources</option>
+                                <option value="legal">Legal</option>
+                                <option value="operations">Operations</option>
+                                <option value="marketing">Marketing</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectColor">Color</label>
+                            <input type="color" id="projectColor" class="form-control" value="#667eea">
+                        </div>
+                        <div class="form-group">
+                            <label for="projectStatus">Status</label>
+                            <select id="projectStatus" class="form-control">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectDescription">Description</label>
+                        <textarea id="projectDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Roles *</label>
+                        <div class="role-selection" id="roleSelection">
+                            <!-- Roles will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Fields</label>
+                        <div id="customFields">
+                            <div style="margin-bottom: 1rem;">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="addCustomField()">
+                                    ➕ Add Field
+                                </button>
+                            </div>
+                            <div id="fieldsList">
+                                <!-- Custom fields will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('projectModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveProjectBtn">
+                            <span id="saveProjectText">Save Project</span>
+                            <span id="saveProjectLoader" class="loading hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const AppState = {
+            currentUser: null,
+            token: null,
+            users: [],
+            roles: [],
+            projects: [],
+            currentTab: 'users',
+            apiBase: 'http://localhost:3000/api'
+        };
+
+        // Available permissions
+        const PERMISSIONS = [
+            { id: 'user_create', label: 'Create Users', category: 'User Management' },
+            { id: 'user_edit', label: 'Edit Users', category: 'User Management' },
+            { id: 'user_delete', label: 'Delete Users', category: 'User Management' },
+            { id: 'user_view', label: 'View Users', category: 'User Management' },
+            { id: 'role_create', label: 'Create Roles', category: 'Role Management' },
+            { id: 'role_edit', label: 'Edit Roles', category: 'Role Management' },
+            { id: 'role_delete', label: 'Delete Roles', category: 'Role Management' },
+            { id: 'role_view', label: 'View Roles', category: 'Role Management' },
+            { id: 'project_create', label: 'Create Projects', category: 'Project Management' },
+            { id: 'project_edit', label: 'Edit Projects', category: 'Project Management' },
+            { id: 'project_delete', label: 'Delete Projects', category: 'Project Management' },
+            { id: 'project_view', label: 'View Projects', category: 'Project Management' },
+            { id: 'document_create', label: 'Create Documents', category: 'Document Management' },
+            { id: 'document_edit', label: 'Edit Documents', category: 'Document Management' },
+            { id: 'document_delete', label: 'Delete Documents', category: 'Document Management' },
+            { id: 'document_view', label: 'View Documents', category: 'Document Management' },
+            { id: 'document_scan', label: 'Scan Documents', category: 'Document Operations' },
+            { id: 'document_upload', label: 'Upload Documents', category: 'Document Operations' },
+            { id: 'document_print', label: 'Print Documents', category: 'Document Operations' },
+            { id: 'document_email', label: 'Email Documents', category: 'Document Operations' },
+            { id: 'document_annotate', label: 'Annotate Documents', category: 'Document Operations' },
+            { id: 'admin_access', label: 'Administrative Access', category: 'System' }
+        ];
+
+        // API Client
+        const API = {
+            getHeaders() {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (AppState.token) {
+                    headers['Authorization'] = `Bearer ${AppState.token}`;
+                }
+                
+                return headers;
+            },
+
+            async request(endpoint, options = {}) {
+                try {
+                    const url = `${AppState.apiBase}${endpoint}`;
+                    const config = {
+                        ...options,
+                        headers: {
+                            ...this.getHeaders(),
+                            ...options.headers
+                        }
+                    };
+
+                    const response = await fetch(url, config);
+                    
+                    if (!response.ok) {
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                        } catch (e) {
+                            errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+                        }
+                        
+                        let errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+                        
+                        if (response.status === 403) {
+                            errorMessage = `Access denied: ${errorData.error || 'You may not have permission for this action'}`;
+                        } else if (response.status === 401) {
+                            errorMessage = `Authentication failed: ${errorData.error || 'Please log in again'}`;
+                            logout();
+                        } else if (response.status === 404) {
+                            errorMessage = `Not found: ${errorData.error || 'The requested resource was not found'}`;
+                        }
+                        
+                        throw new Error(errorMessage);
+                    }
+                    
+                    return response;
+                } catch (error) {
+                    console.error('API Request failed:', error);
+                    if (error.message.includes('fetch')) {
+                        throw new Error('Network error: Unable to connect to server. Please check your connection and ensure the server is running on http://localhost:3000');
+                    }
+                    throw error;
+                }
+            },
+
+            async get(endpoint) {
+                const response = await this.request(endpoint);
+                return response.json();
+            },
+
+            async post(endpoint, data) {
+                const response = await this.request(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                return response.json();
+            },
+
+            async put(endpoint, data) {
+                const response = await this.request(endpoint, {
+                    method: 'PUT',
+                    body: JSON.stringify(data),
+                });
+                return response.json();
+            },
+
+            async delete(endpoint) {
+                const response = await this.request(endpoint, {
+                    method: 'DELETE',
+                });
+                return response.json();
+            }
+        };
+
+        // Utility Functions
+        const Utils = {
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            },
+
+            sanitizeInput(input) {
+                if (!input) return '';
+                const div = document.createElement('div');
+                div.textContent = input;
+                return div.innerHTML;
+            },
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                
+                const icon = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                }[type] || 'ℹ️';
+                
+                toast.innerHTML = `${icon} ${message}`;
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            },
+
+            generateAvatar(name) {
+                return name ? name.charAt(0).toUpperCase() : '?';
+            },
+
+            setLoading(elementId, isLoading) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                
+                const textSpan = element.querySelector('#' + elementId.replace('Btn', 'Text'));
+                const loader = element.querySelector('#' + elementId.replace('Btn', 'Loader'));
+                
+                if (isLoading) {
+                    element.disabled = true;
+                    if (textSpan) textSpan.style.display = 'none';
+                    if (loader) loader.classList.remove('hidden');
+                } else {
+                    element.disabled = false;
+                    if (textSpan) textSpan.style.display = 'inline';
+                    if (loader) loader.classList.add('hidden');
+                }
+            }
+        };
+
+        // Authentication Module
+        const Auth = {
+            async login(username, password) {
+                try {
+                    Utils.setLoading('loginBtn', true);
+                    
+                    const data = await API.post('/auth/login', { username, password });
+                    
+                    AppState.token = data.token;
+                    AppState.currentUser = data.user;
+                    
+                    // Check if user has admin access
+                    if (!data.user.permissions.includes('admin_access')) {
+                        throw new Error('Administrative access required');
+                    }
+                    
+                    // Store token for persistence (same key as user console)
+                    if (typeof(Storage) !== "undefined") {
+                        localStorage.setItem('dms_token', data.token);
+                    }
+                    
+                    this.showMainApp();
+                    Utils.showToast('Welcome to Admin Panel!', 'success');
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showError('loginError', error.message || 'Login failed');
+                } finally {
+                    Utils.setLoading('loginBtn', false);
+                }
+            },
+
+            async validateToken() {
+                try {
+                    const storedToken = localStorage.getItem('dms_token');
+                    if (!storedToken) return false;
+                    
+                    AppState.token = storedToken;
+                    const data = await API.get('/auth/validate');
+                    
+                    // Check if user has admin access
+                    if (!data.user.permissions.includes('admin_access')) {
+                        return false;
+                    }
+                    
+                    AppState.currentUser = data.user;
+                    return true;
+                } catch (error) {
+                    console.error('Token validation failed:', error);
+                    if (typeof(Storage) !== "undefined") {
+                        localStorage.removeItem('dms_token');
+                    }
+                    return false;
+                }
+            },
+
+            logout() {
+                AppState.token = null;
+                AppState.currentUser = null;
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.removeItem('dms_token');
+                }
+                this.showLogin();
+                Utils.showToast('Logged out successfully', 'info');
+            },
+
+            showLogin() {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            },
+
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.updateUserInfo();
+                this.loadInitialData();
+                
+                // Add debug controls for admins
+                setTimeout(() => {
+                    addDebugControls();
+                }, 100);
+            },
+
+            updateUserInfo() {
+                const user = AppState.currentUser;
+                const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username;
+                
+                document.getElementById('userDisplay').textContent = displayName;
+                document.getElementById('userRoleDisplay').textContent = user.role_name || 'Administrator';
+                document.getElementById('userAvatar').textContent = Utils.generateAvatar(displayName);
+            },
+
+            async loadInitialData() {
+                await Promise.all([
+                    Users.load(),
+                    Roles.load(),
+                    Projects.load()
+                ]);
+            },
+
+            showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                element.textContent = message;
+                element.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    element.classList.add('hidden');
+                }, 5000);
+            }
+        };
+
+        // User Management
+        const Users = {
+            async load() {
+                try {
+                    const users = await API.get('/users');
+                    AppState.users = users;
+                    this.render();
+                } catch (error) {
+                    console.error('Failed to load users:', error);
+                    Utils.showToast('Failed to load users: ' + error.message, 'error');
+                }
+            },
+
+            render() {
+                const container = document.getElementById('usersTableContainer');
+                
+                if (AppState.users.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <h3>No users found</h3>
+                            <p>Add your first user to get started.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${AppState.users.map(user => `
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">
+                                                ${Utils.generateAvatar(`${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username)}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600;">${Utils.sanitizeInput(`${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username)}</div>
+                                                <div style="font-size: 0.8rem; color: var(--text-light);">@${Utils.sanitizeInput(user.username)}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${Utils.sanitizeInput(user.email)}</td>
+                                    <td>${Utils.sanitizeInput(user.role_name || 'No Role')}</td>
+                                    <td><span class="status-badge status-${user.status}">${user.status}</span></td>
+                                    <td>${Utils.formatDate(user.created_at)}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-outline btn-sm" onclick="Users.edit(${user.id})" title="Edit User">✏️</button>
+                                            <button class="btn btn-danger btn-sm" onclick="Users.delete(${user.id}, '${Utils.sanitizeInput(user.username)}')" title="Delete User">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            },
+
+            async save(userData) {
+                try {
+                    if (userData.id) {
+                        // Update existing user
+                        await API.put(`/users/${userData.id}`, userData);
+                        Utils.showToast('User updated successfully', 'success');
+                    } else {
+                        // Create new user
+                        await API.post('/users', userData);
+                        Utils.showToast('User created successfully', 'success');
+                    }
+                    
+                    await this.load();
+                    closeModal('userModal');
+                } catch (error) {
+                    throw error;
+                }
+            },
+
+            // FIXED: Edit function with proper timing and element type checking
+            async edit(userId) {
+                try {
+                    // 1. Ensure roles are loaded first
+                    if (!AppState.roles || AppState.roles.length === 0) {
+                        await Roles.load();
+                    }
+                    
+                    // 2. Get user data
+                    const user = await API.get(`/users/${userId}`);
+                    
+                    // 3. Populate form fields
+                    document.getElementById('userModalTitle').textContent = '✏️ Edit User';
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('userUsername').value = user.username;
+                    document.getElementById('userEmail').value = user.email;
+                    document.getElementById('userFirstName').value = user.first_name || '';
+                    document.getElementById('userLastName').value = user.last_name || '';
+                    document.getElementById('userPassword').value = '';
+                    document.getElementById('userStatus').value = user.status;
+                    
+                    document.getElementById('passwordNote').textContent = '(leave blank to keep current)';
+                    document.getElementById('userPassword').removeAttribute('required');
+                    
+                    // 4. Show modal FIRST
+                    document.getElementById('userModal').classList.add('active');
+                    
+                    // 5. Update dropdowns AFTER modal is shown with delay
+                    setTimeout(() => {
+                        Roles.updateRoleDropdowns();
+                        // Set the user's role AFTER dropdown is populated
+                        const userRoleSelect = document.getElementById('userRole');
+                        if (userRoleSelect && userRoleSelect.tagName === 'SELECT') {
+                            userRoleSelect.value = user.role_id || '';
+                        }
+                    }, 100);
+                    
+                } catch (error) {
+                    Utils.showToast('Failed to load user: ' + error.message, 'error');
+                }
+            },
+
+            async delete(userId, username) {
+                if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+                    return;
+                }
+                
+                try {
+                    await API.delete(`/users/${userId}`);
+                    Utils.showToast('User deleted successfully', 'success');
+                    await this.load();
+                } catch (error) {
+                    Utils.showToast('Failed to delete user: ' + error.message, 'error');
+                }
+            }
+        };
+
+        // Role Management
+        const Roles = {
+            async load() {
+                try {
+                    const roles = await API.get('/roles');
+                    AppState.roles = roles;
+                    this.render();
+                    this.updateRoleDropdowns();
+                } catch (error) {
+                    console.error('Failed to load roles:', error);
+                    Utils.showToast('Failed to load roles: ' + error.message, 'error');
+                }
+            },
+
+            render() {
+                const container = document.getElementById('rolesTableContainer');
+                
+                if (AppState.roles.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛡️</div>
+                            <h3>No roles found</h3>
+                            <p>Add your first role to get started.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Description</th>
+                                <th>Users</th>
+                                <th>Permissions</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${AppState.roles.map(role => `
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600; color: var(--primary-color);">
+                                            🛡️ ${Utils.sanitizeInput(role.name)}
+                                        </div>
+                                    </td>
+                                    <td>${Utils.sanitizeInput(role.description || 'No description')}</td>
+                                    <td>
+                                        <span class="status-badge status-active">${role.user_count || 0} users</span>
+                                    </td>
+                                    <td>${role.permissions ? role.permissions.length : 0} permissions</td>
+                                    <td>${Utils.formatDate(role.created_at)}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-outline btn-sm" onclick="Roles.edit(${role.id})" title="Edit Role">✏️</button>
+                                            <button class="btn btn-danger btn-sm" onclick="Roles.delete(${role.id}, '${Utils.sanitizeInput(role.name)}')" title="Delete Role">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            },
+
+            updateRoleDropdowns() {
+                const userRoleSelect = document.getElementById('userRole');
+                const roleSelection = document.getElementById('roleSelection');
+                
+                console.log('🔄 Updating role dropdowns with', AppState.roles.length, 'roles');
+                
+                // Update user role dropdown - ENHANCED with validation
+                if (userRoleSelect && userRoleSelect.tagName === 'SELECT') {
+                    const originalValue = userRoleSelect.value;
+                    
+                    // Only include valid roles
+                    const validRoles = AppState.roles.filter(role => 
+                        role.id && typeof role.id === 'number' && role.name
+                    );
+                    
+                    userRoleSelect.innerHTML = '<option value="">Select Role</option>' +
+                        validRoles.map(role => 
+                            `<option value="${role.id}">${Utils.sanitizeInput(role.name)}</option>`
+                        ).join('');
+                    
+                    userRoleSelect.value = originalValue; // Restore selection
+                    console.log('✅ Updated user role dropdown with', validRoles.length, 'valid roles');
+                }
+                
+                // Update project role selection - ENHANCED with validation
+                if (roleSelection) {
+                    const validRoles = AppState.roles.filter(role => 
+                        role.id && typeof role.id === 'number' && role.name
+                    );
+                    
+                    roleSelection.innerHTML = validRoles.map(role => `
+                        <div class="role-item">
+                            <input type="checkbox" id="role_${role.id}" value="${role.id}" data-role-name="${Utils.sanitizeInput(role.name)}">
+                            <label for="role_${role.id}">${Utils.sanitizeInput(role.name)}</label>
+                        </div>
+                    `).join('');
+                    
+                    console.log('✅ Updated project role selection with', validRoles.length, 'valid roles');
+                }
+            },
+
+            renderPermissions(selectedPermissions = []) {
+                const container = document.getElementById('permissionsGrid');
+                
+                container.innerHTML = PERMISSIONS.map(permission => `
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm_${permission.id}" value="${permission.id}" 
+                               ${selectedPermissions.includes(permission.id) ? 'checked' : ''}>
+                        <label for="perm_${permission.id}" style="margin: 0; font-size: 0.9rem;">
+                            <strong>${permission.label}</strong><br>
+                            <small style="color: var(--text-light);">${permission.category}</small>
+                        </label>
+                    </div>
+                `).join('');
+            },
+
+            async save(roleData) {
+                try {
+                    if (roleData.id) {
+                        // Update existing role
+                        await API.put(`/roles/${roleData.id}`, roleData);
+                        Utils.showToast('Role updated successfully', 'success');
+                    } else {
+                        // Create new role
+                        await API.post('/roles', roleData);
+                        Utils.showToast('Role created successfully', 'success');
+                    }
+                    
+                    await this.load();
+                    closeModal('roleModal');
+                } catch (error) {
+                    throw error;
+                }
+            },
+
+            async edit(roleId) {
+                try {
+                    const role = await API.get(`/roles/${roleId}`);
+                    
+                    document.getElementById('roleModalTitle').textContent = '✏️ Edit Role';
+                    document.getElementById('roleId').value = role.id;
+                    document.getElementById('roleName').value = role.name;
+                    document.getElementById('roleDescription').value = role.description || '';
+                    
+                    this.renderPermissions(role.permissions || []);
+                    
+                    document.getElementById('roleModal').classList.add('active');
+                } catch (error) {
+                    Utils.showToast('Failed to load role: ' + error.message, 'error');
+                }
+            },
+
+            async delete(roleId, roleName) {
+                if (!confirm(`Are you sure you want to delete role "${roleName}"?`)) {
+                    return;
+                }
+                
+                try {
+                    await API.delete(`/roles/${roleId}`);
+                    Utils.showToast('Role deleted successfully', 'success');
+                    await this.load();
+                } catch (error) {
+                    Utils.showToast('Failed to delete role: ' + error.message, 'error');
+                }
+            }
+        };
+
+        // Enhanced Project Management with Dropdown Options Support
+        const Projects = {
+            async load() {
+                try {
+                    const projects = await API.get('/projects');
+                    AppState.projects = projects;
+                    this.render();
+                } catch (error) {
+                    console.error('Failed to load projects:', error);
+                    Utils.showToast('Failed to load projects: ' + error.message, 'error');
+                }
+            },
+
+            render() {
+                const container = document.getElementById('projectsTableContainer');
+                
+                if (AppState.projects.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <h3>No projects found</h3>
+                            <p>Add your first project to get started.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Type</th>
+                                <th>Documents</th>
+                                <th>Assigned Roles</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${AppState.projects.map(project => `
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 4px; height: 32px; background: ${project.color}; border-radius: 2px;"></div>
+                                            <div>
+                                                <div style="font-weight: 600;">${Utils.sanitizeInput(project.name)}</div>
+                                                <div style="font-size: 0.8rem; color: var(--text-light);">${Utils.sanitizeInput(project.description || 'No description')}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${Utils.sanitizeInput(project.type)}</td>
+                                    <td>
+                                        <span class="status-badge status-active">${project.document_count || 0} docs</span>
+                                    </td>
+                                    <td>
+                                        ${(project.assigned_roles || []).map(role => 
+                                            `<span class="status-badge status-active" style="margin-right: 0.25rem;">${Utils.sanitizeInput(role.name)}</span>`
+                                        ).join('')}
+                                    </td>
+                                    <td><span class="status-badge status-${project.status}">${project.status}</span></td>
+                                    <td>${Utils.formatDate(project.created_at)}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-outline btn-sm" onclick="Projects.edit(${project.id})" title="Edit Project">✏️</button>
+                                            <button class="btn btn-danger btn-sm" onclick="Projects.delete(${project.id}, '${Utils.sanitizeInput(project.name)}')" title="Delete Project">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            },
+
+            async save(projectData) {
+                try {
+                    if (projectData.id) {
+                        // Update existing project
+                        await API.put(`/projects/${projectData.id}`, projectData);
+                        Utils.showToast('Project updated successfully', 'success');
+                    } else {
+                        // Create new project
+                        await API.post('/projects', projectData);
+                        Utils.showToast('Project created successfully', 'success');
+                    }
+                    
+                    await this.load();
+                    closeModal('projectModal');
+                } catch (error) {
+                    throw error;
+                }
+            },
+
+            async edit(projectId) {
+                try {
+                    console.log(`📝 Editing project ${projectId}`);
+                    
+                    // Ensure roles are loaded first
+                    if (!AppState.roles || AppState.roles.length === 0) {
+                        console.log('🔄 Loading roles first...');
+                        await Roles.load();
+                    }
+                    
+                    // Validate that we have roles
+                    const validRoles = AppState.roles.filter(role => role.id && role.name);
+                    if (validRoles.length === 0) {
+                        throw new Error('No valid roles available. Please check role configuration.');
+                    }
+                    
+                    console.log(`✅ Found ${validRoles.length} valid roles`);
+                    
+                    const project = await API.get(`/projects/${projectId}`);
+                    console.log('📄 Loaded project data:', project);
+                    
+                    document.getElementById('projectModalTitle').textContent = '✏️ Edit Project';
+                    document.getElementById('projectId').value = project.id;
+                    document.getElementById('projectName').value = project.name;
+                    document.getElementById('projectDescription').value = project.description || '';
+                    document.getElementById('projectType').value = project.type;
+                    document.getElementById('projectColor').value = project.color;
+                    document.getElementById('projectStatus').value = project.status;
+                    
+                    // Show modal first
+                    document.getElementById('projectModal').classList.add('active');
+                    
+                    // Then update role selection with delay
+                    setTimeout(() => {
+                        Roles.updateRoleDropdowns();
+                        
+                        // Set assigned roles with validation
+                        const assignedRoleIds = (project.assigned_roles || [])
+                            .map(r => r.id)
+                            .filter(id => id && typeof id === 'number');
+                        
+                        console.log('🎯 Setting assigned roles:', assignedRoleIds);
+                        
+                        document.querySelectorAll('#roleSelection input[type="checkbox"]').forEach(checkbox => {
+                            const roleId = parseInt(checkbox.value);
+                            const shouldBeChecked = assignedRoleIds.includes(roleId);
+                            checkbox.checked = shouldBeChecked;
+                            
+                            if (shouldBeChecked) {
+                                console.log(`✅ Checked role ${roleId} (${checkbox.dataset.roleName || 'Unknown'})`);
+                            }
+                        });
+                    }, 100);
+                    
+                    // Set custom fields
+                    this.renderCustomFields(project.index_fields || []);
+                    
+                } catch (error) {
+                    console.error('❌ Failed to load project for editing:', error);
+                    Utils.showToast('Failed to load project: ' + error.message, 'error');
+                }
+            },
+
+            async delete(projectId, projectName) {
+                if (!confirm(`Are you sure you want to delete project "${projectName}"?`)) {
+                    return;
+                }
+                
+                try {
+                    await API.delete(`/projects/${projectId}`);
+                    Utils.showToast('Project deleted successfully', 'success');
+                    await this.load();
+                } catch (error) {
+                    Utils.showToast('Failed to delete project: ' + error.message, 'error');
+                }
+            },
+
+            // ENHANCED: renderCustomFields with dropdown options support
+            renderCustomFields(fields = []) {
+                const container = document.getElementById('fieldsList');
+                
+                container.innerHTML = fields.map((field, index) => `
+                    <div class="form-row" style="background: var(--light-bg); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;" data-field-index="${index}">
+                        <div class="form-group">
+                            <label>Field Name</label>
+                            <input type="text" class="form-control field-name" value="${Utils.sanitizeInput(field.name || '')}" placeholder="field_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Field Label</label>
+                            <input type="text" class="form-control field-label" value="${Utils.sanitizeInput(field.label || '')}" placeholder="Field Label">
+                        </div>
+                        <div class="form-group">
+                            <label>Field Type</label>
+                            <select class="form-control field-type" onchange="Projects.handleFieldTypeChange(this)">
+                                <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text</option>
+                                <option value="number" ${field.type === 'number' ? 'selected' : ''}>Number</option>
+                                <option value="date" ${field.type === 'date' ? 'selected' : ''}>Date</option>
+                                <option value="dropdown" ${field.type === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+                                <option value="checkbox" ${field.type === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Required</label>
+                            <input type="checkbox" class="field-required" ${field.required ? 'checked' : ''}>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: end;">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomField(this)">Remove</button>
+                        </div>
+                        
+                        <!-- Dropdown Options Section -->
+                        <div class="dropdown-options" style="grid-column: 1 / -1; display: ${field.type === 'dropdown' ? 'block' : 'none'};">
+                            <label>Dropdown Options</label>
+                            <div class="option-input-group">
+                                <input type="text" class="option-input" placeholder="Enter option">
+                                <button type="button" class="add-option-btn" onclick="Projects.addDropdownOption(this)">Add</button>
+                            </div>
+                            <div class="option-list">
+                                ${(field.options || []).map(option => `
+                                    <div class="option-item">
+                                        <span>${Utils.sanitizeInput(option)}</span>
+                                        <button type="button" class="remove-option-btn" onclick="Projects.removeDropdownOption(this)">×</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            // NEW: Handle field type changes to show/hide dropdown options
+            handleFieldTypeChange(selectElement) {
+                const fieldRow = selectElement.closest('.form-row');
+                const dropdownOptions = fieldRow.querySelector('.dropdown-options');
+                
+                if (selectElement.value === 'dropdown') {
+                    dropdownOptions.style.display = 'block';
+                } else {
+                    dropdownOptions.style.display = 'none';
+                }
+            },
+
+            // NEW: Add dropdown option
+            addDropdownOption(button) {
+                const optionInput = button.parentElement.querySelector('.option-input');
+                const optionText = optionInput.value.trim();
+                
+                if (!optionText) {
+                    Utils.showToast('Please enter an option value', 'warning');
+                    return;
+                }
+                
+                const optionList = button.parentElement.nextElementSibling;
+                const optionHtml = `
+                    <div class="option-item">
+                        <span>${Utils.sanitizeInput(optionText)}</span>
+                        <button type="button" class="remove-option-btn" onclick="Projects.removeDropdownOption(this)">×</button>
+                    </div>
+                `;
+                
+                optionList.insertAdjacentHTML('beforeend', optionHtml);
+                optionInput.value = '';
+                optionInput.focus();
+            },
+
+            // NEW: Remove dropdown option
+            removeDropdownOption(button) {
+                button.parentElement.remove();
+            },
+
+            // ENHANCED: Collect custom fields with dropdown options
+            getCustomFields() {
+                const fields = [];
+                const fieldRows = document.querySelectorAll('#fieldsList .form-row');
+                
+                fieldRows.forEach((row, index) => {
+                    const name = row.querySelector('.field-name').value.trim();
+                    const label = row.querySelector('.field-label').value.trim();
+                    const type = row.querySelector('.field-type').value;
+                    const required = row.querySelector('.field-required').checked;
+                    
+                    if (name && label) {
+                        const field = {
+                            name,
+                            label,
+                            type,
+                            required,
+                            options: []
+                        };
+                        
+                        // Collect dropdown options if field type is dropdown
+                        if (type === 'dropdown') {
+                            const optionItems = row.querySelectorAll('.option-item span');
+                            field.options = Array.from(optionItems).map(span => span.textContent.trim());
+                        }
+                        
+                        fields.push(field);
+                    }
+                });
+                
+                return fields;
+            }
+        };
+
+        // Global Functions
+        window.logout = () => Auth.logout();
+
+        window.switchTab = (tab) => {
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+
+            // Update sections
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.toggle('active', section.id === `${tab}Section`);
+            });
+
+            AppState.currentTab = tab;
+        };
+
+        // FIXED: openUserModal function with proper role loading
+        window.openUserModal = async () => {
+            try {
+                // Ensure roles are loaded first
+                if (!AppState.roles || AppState.roles.length === 0) {
+                    await Roles.load();
+                }
+                
+                document.getElementById('userModalTitle').textContent = '👥 Add New User';
+                document.getElementById('userForm').reset();
+                document.getElementById('userId').value = '';
+                document.getElementById('passwordNote').textContent = '';
+                document.getElementById('userPassword').setAttribute('required', 'required');
+                
+                // Show modal first
+                document.getElementById('userModal').classList.add('active');
+                
+                // Then update dropdowns with delay
+                setTimeout(() => {
+                    Roles.updateRoleDropdowns();
+                }, 100);
+                
+            } catch (error) {
+                Utils.showToast('Failed to load roles: ' + error.message, 'error');
+            }
+        };
+
+        window.openRoleModal = () => {
+            document.getElementById('roleModalTitle').textContent = '🛡️ Add New Role';
+            document.getElementById('roleForm').reset();
+            document.getElementById('roleId').value = '';
+            Roles.renderPermissions();
+            document.getElementById('roleModal').classList.add('active');
+        };
+
+        window.openProjectModal = async () => {
+            try {
+                // Ensure roles are loaded first
+                if (!AppState.roles || AppState.roles.length === 0) {
+                    await Roles.load();
+                }
+                
+                document.getElementById('projectModalTitle').textContent = '📂 Add New Project';
+                document.getElementById('projectForm').reset();
+                document.getElementById('projectId').value = '';
+                document.getElementById('projectColor').value = '#667eea';
+                Projects.renderCustomFields();
+                
+                // Show modal first
+                document.getElementById('projectModal').classList.add('active');
+                
+                // Then update role selection with delay
+                setTimeout(() => {
+                    Roles.updateRoleDropdowns();
+                }, 100);
+                
+            } catch (error) {
+                Utils.showToast('Failed to load roles: ' + error.message, 'error');
+            }
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        // ENHANCED: addCustomField with dropdown support
+        window.addCustomField = () => {
+            const container = document.getElementById('fieldsList');
+            const fieldIndex = container.children.length;
+            const fieldHtml = `
+                <div class="form-row" style="background: var(--light-bg); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;" data-field-index="${fieldIndex}">
+                    <div class="form-group">
+                        <label>Field Name</label>
+                        <input type="text" class="form-control field-name" placeholder="field_name">
+                    </div>
+                    <div class="form-group">
+                        <label>Field Label</label>
+                        <input type="text" class="form-control field-label" placeholder="Field Label">
+                    </div>
+                    <div class="form-group">
+                        <label>Field Type</label>
+                        <select class="form-control field-type" onchange="Projects.handleFieldTypeChange(this)">
+                            <option value="text">Text</option>
+                            <option value="number">Number</option>
+                            <option value="date">Date</option>
+                            <option value="dropdown">Dropdown</option>
+                            <option value="checkbox">Checkbox</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Required</label>
+                        <input type="checkbox" class="field-required">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomField(this)">Remove</button>
+                    </div>
+                    
+                    <!-- Dropdown Options Section -->
+                    <div class="dropdown-options" style="grid-column: 1 / -1; display: none;">
+                        <label>Dropdown Options</label>
+                        <div class="option-input-group">
+                            <input type="text" class="option-input" placeholder="Enter option">
+                            <button type="button" class="add-option-btn" onclick="Projects.addDropdownOption(this)">Add</button>
+                        </div>
+                        <div class="option-list">
+                            <!-- Options will be added here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', fieldHtml);
+        };
+
+        window.removeCustomField = (button) => {
+            button.closest('.form-row').remove();
+        };
+
+        window.filterUsers = () => {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTableContainer tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        };
+
+        window.refreshAuditLog = () => {
+            Utils.showToast('Audit log feature coming soon...', 'info');
+        };
+
+        // NEW: Debug function to check foreign key status
+        window.debugForeignKeys = async () => {
+            if (!AppState.currentUser.permissions.includes('admin_access')) {
+                Utils.showToast('Admin access required', 'error');
+                return;
+            }
+            
+            try {
+                const result = await API.get('/debug/foreign-keys');
+                console.log('🔍 Foreign Key Debug Report:', result);
+                
+                if (result.foreign_keys_enabled) {
+                    if (result.violations_count === 0) {
+                        Utils.showToast('✅ Foreign keys enabled, no violations found', 'success');
+                    } else {
+                        Utils.showToast(`⚠️ Foreign keys enabled, but ${result.violations_count} violations found. Check console for details.`, 'warning');
+                        console.error('Foreign key violations:', result.violations);
+                    }
+                } else {
+                    Utils.showToast('❌ Foreign keys are disabled! This could cause data integrity issues.', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Debug failed: ' + error.message, 'error');
+            }
+        };
+
+        // ENHANCED: Add foreign key debug to toolbar
+        window.addDebugControls = () => {
+            const adminControls = document.getElementById('adminControls');
+            if (adminControls && !document.getElementById('debugForeignKeysBtn')) {
+                const debugBtn = document.createElement('button');
+                debugBtn.id = 'debugForeignKeysBtn';
+                debugBtn.className = 'btn btn-info btn-sm';
+                debugBtn.innerHTML = '🔍 Check FK';
+                debugBtn.title = 'Check foreign key constraints';
+                debugBtn.onclick = debugForeignKeys;
+                adminControls.insertBefore(debugBtn, adminControls.firstChild);
+            }
+        };
+
+        // Event Handlers
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔧 Admin Panel Loading...');
+            
+            // Try to auto-login with stored token
+            const isAuthenticated = await Auth.validateToken();
+            
+            if (isAuthenticated) {
+                Auth.showMainApp();
+            } else {
+                Auth.showLogin();
+            }
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            await Auth.login(username, password);
+        });
+
+        // User form handler
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const userData = {
+                id: document.getElementById('userId').value || undefined,
+                username: formData.get('userUsername') || document.getElementById('userUsername').value,
+                email: formData.get('userEmail') || document.getElementById('userEmail').value,
+                password: formData.get('userPassword') || document.getElementById('userPassword').value,
+                first_name: formData.get('userFirstName') || document.getElementById('userFirstName').value,
+                last_name: formData.get('userLastName') || document.getElementById('userLastName').value,
+                role_id: parseInt(formData.get('userRole') || document.getElementById('userRole').value) || null,
+                status: formData.get('userStatus') || document.getElementById('userStatus').value
+            };
+
+            // Remove empty password for updates
+            if (userData.id && !userData.password) {
+                delete userData.password;
+            }
+
+            try {
+                Utils.setLoading('saveUserBtn', true);
+                await Users.save(userData);
+            } catch (error) {
+                Utils.showToast('Failed to save user: ' + error.message, 'error');
+            } finally {
+                Utils.setLoading('saveUserBtn', false);
+            }
+        });
+
+        // Role form handler
+        document.getElementById('roleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const selectedPermissions = Array.from(document.querySelectorAll('#permissionsGrid input:checked')).map(cb => cb.value);
+            
+            const roleData = {
+                id: document.getElementById('roleId').value || undefined,
+                name: document.getElementById('roleName').value,
+                description: document.getElementById('roleDescription').value,
+                permissions: selectedPermissions
+            };
+
+            try {
+                Utils.setLoading('saveRoleBtn', true);
+                await Roles.save(roleData);
+            } catch (error) {
+                Utils.showToast('Failed to save role: ' + error.message, 'error');
+            } finally {
+                Utils.setLoading('saveRoleBtn', false);
+            }
+        });
+
+        // ENHANCED: Project form handler with dropdown options support and validation
+        document.getElementById('projectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // ENHANCED: Better role validation
+            const selectedRoles = Array.from(document.querySelectorAll('#roleSelection input:checked'))
+                .map(cb => {
+                    const roleId = parseInt(cb.value);
+                    if (isNaN(roleId) || roleId <= 0) {
+                        throw new Error(`Invalid role ID: ${cb.value}`);
+                    }
+                    return roleId;
+                })
+                .filter(roleId => roleId > 0); // Filter out any invalid IDs
+            
+            console.log('📝 Selected roles for project:', selectedRoles);
+            
+            // Get custom fields with dropdown options
+            const customFields = Projects.getCustomFields();
+            console.log('📝 Custom fields for project:', customFields);
+            
+            const projectData = {
+                id: document.getElementById('projectId').value || undefined,
+                name: document.getElementById('projectName').value.trim(),
+                description: document.getElementById('projectDescription').value.trim(),
+                type: document.getElementById('projectType').value,
+                color: document.getElementById('projectColor').value,
+                status: document.getElementById('projectStatus').value,
+                assigned_roles: selectedRoles,
+                index_fields: customFields
+            };
+
+            // Enhanced validation
+            if (!projectData.name) {
+                Utils.showToast('Project name is required', 'warning');
+                return;
+            }
+
+            if (selectedRoles.length === 0) {
+                Utils.showToast('Please assign at least one role to the project', 'warning');
+                return;
+            }
+
+            // Validate that all selected roles exist in our current roles list
+            const invalidRoles = selectedRoles.filter(roleId => 
+                !AppState.roles.find(role => role.id === roleId)
+            );
+
+            if (invalidRoles.length > 0) {
+                Utils.showToast(`Invalid role IDs detected: ${invalidRoles.join(', ')}. Please refresh and try again.`, 'error');
+                return;
+            }
+
+            console.log('✅ Project data validation passed:', projectData);
+
+            try {
+                Utils.setLoading('saveProjectBtn', true);
+                await Projects.save(projectData);
+            } catch (error) {
+                console.error('❌ Project save failed:', error);
+                
+                // Enhanced error handling
+                if (error.message.includes('Foreign key constraint failed')) {
+                    Utils.showToast('Database constraint error: Please ensure all selected roles are valid and try again.', 'error');
+                } else if (error.message.includes('role')) {
+                    Utils.showToast('Role assignment error: ' + error.message, 'error');
+                } else {
+                    Utils.showToast('Failed to save project: ' + error.message, 'error');
+                }
+            } finally {
+                Utils.setLoading('saveProjectBtn', false);
+            }
+        });
+
+        // Modal close on backdrop click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+
+        console.log('✅ Enhanced Admin Panel Ready');
+        console.log('🔗 Connected to API at:', AppState.apiBase);
+        console.log('📝 Dropdown options support enabled');
+    </script>
+</body>
+</html>
